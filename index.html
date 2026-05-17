@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Veloura Player</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="icon" type="image/png" href="./veloura-logo.png" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body data-theme="late-night">
+    <div class="background-glow background-glow-left"></div>
+    <div class="background-glow background-glow-right"></div>
+
+    <div class="app-shell">
+      <aside class="sidebar panel">
+        <div class="brand-lockup">
+          <p class="eyebrow">A Luxury Audio Player</p>
+          <h1>Veloura</h1>
+          <p class="muted">
+            A private lounge for your favorite music. Upload your tracks and let
+            the room breathe around them.
+          </p>
+        </div>
+
+        <div class="sidebar-card">
+          <p class="card-label">Collection</p>
+          <div class="collection-stats">
+            <div>
+              <span id="trackCount">0</span>
+              <p>Tracks</p>
+            </div>
+            <div>
+              <span id="playlistDuration">00:00</span>
+              <p>Runtime</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="sidebar-card moods-card">
+          <p class="card-label">Curated Moods</p>
+          <div class="moods">
+            <button class="mood-pill active" type="button" data-theme="auto" aria-pressed="true">Auto</button>
+            <button class="mood-pill" type="button" data-theme="late-night" aria-pressed="false">Late Night</button>
+            <button class="mood-pill" type="button" data-theme="velvet-soul" aria-pressed="false">Velvet Soul</button>
+            <button class="mood-pill" type="button" data-theme="glass-house" aria-pressed="false">Glass House</button>
+            <button class="mood-pill" type="button" data-theme="skyline-ride" aria-pressed="false">Skyline Ride</button>
+          </div>
+        </div>
+
+        <label class="upload-panel" for="audioUpload">
+          <input id="audioUpload" type="file" accept="audio/*" multiple />
+          <span class="upload-label">Add Your Music</span>
+          <span class="upload-caption">MP3, WAV, AAC and more</span>
+        </label>
+
+        <div class="voice-console voice-console-sidebar" aria-live="polite">
+          <button id="voiceButton" class="ghost-button voice-button" type="button" aria-label="Activate voice commands">
+            Voice
+          </button>
+          <div class="voice-copy">
+            <span id="voiceStatus" class="voice-status">Voice ready</span>
+            <span id="voiceTranscript" class="voice-transcript muted">Tap Voice, then say a command.</span>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main-stage">
+        <section class="hero panel">
+          <div class="topbar">
+            <div>
+              <p class="eyebrow">Now Playing</p>
+              <h2 id="heroTitle">Midnight Gold</h2>
+              <p id="heroArtist" class="muted">Veloura Session</p>
+            </div>
+          </div>
+
+          <div class="hero-grid">
+            <div class="now-playing-card">
+              <div class="track-copy">
+                <p class="card-label">Featured Track</p>
+                <h3 id="trackTitle">Midnight Gold</h3>
+                <p id="trackMeta" class="muted">Veloura Session • Demo</p>
+              </div>
+
+              <div id="spectrumShell" class="spectrum-shell" aria-hidden="true">
+                <div class="spectrum-grid"></div>
+                <div class="spectrum-orb"></div>
+                <canvas id="spectrumCanvas" class="spectrum-canvas" width="960" height="220"></canvas>
+              </div>
+
+              <div class="featured-transport">
+                <button
+                  id="featuredShuffleButton"
+                  class="ghost-button compact-button featured-shuffle-button"
+                  type="button"
+                  aria-label="Shuffle playlist"
+                >
+                  Shuffle
+                </button>
+                <button
+                  id="skipBackButton"
+                  class="ghost-button compact-button featured-skip-button"
+                  type="button"
+                  aria-label="Skip backward 5 seconds"
+                >
+                  -5s
+                </button>
+                <button
+                  id="featuredPrevButton"
+                  class="control-button"
+                  type="button"
+                  aria-label="Previous track"
+                >
+                  &#9664;&#9664;
+                </button>
+                <button
+                  id="featuredPlayButton"
+                  class="play-button"
+                  type="button"
+                  aria-label="Play or pause"
+                >
+                  Play
+                </button>
+                <button
+                  id="featuredNextButton"
+                  class="control-button"
+                  type="button"
+                  aria-label="Next track"
+                >
+                  &#9654;&#9654;
+                </button>
+                <button
+                  id="skipForwardButton"
+                  class="ghost-button compact-button featured-skip-button"
+                  type="button"
+                  aria-label="Skip forward 5 seconds"
+                >
+                  +5s
+                </button>
+                <button
+                  id="featuredLoopButton"
+                  class="ghost-button compact-button featured-loop-button"
+                  type="button"
+                  aria-label="Loop current track"
+                >
+                  Loop
+                </button>
+              </div>
+
+              <div class="featured-control-rail">
+                <div class="featured-volume-card">
+                  <div class="featured-control-copy">
+                    <span class="featured-control-label">Volume</span>
+                    <span id="featuredVolumeValue" class="featured-control-value">72%</span>
+                  </div>
+                  <input
+                    id="featuredVolumeBar"
+                    class="featured-range"
+                    type="range"
+                    min="0"
+                    max="100"
+                    value="72"
+                    aria-label="Featured volume control"
+                  />
+                </div>
+
+                <div class="featured-speed-card">
+                  <div class="featured-control-copy">
+                    <span class="featured-control-label">Speed</span>
+                    <span id="speedValue" class="featured-control-value">1.0x</span>
+                  </div>
+                  <div id="speedControls" class="speed-pills" aria-label="Playback speed">
+                    <button class="speed-pill" type="button" data-speed="0.75">0.75x</button>
+                    <button class="speed-pill active" type="button" data-speed="1">1.0x</button>
+                    <button class="speed-pill" type="button" data-speed="1.25">1.25x</button>
+                    <button class="speed-pill" type="button" data-speed="1.5">1.5x</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="progress-cluster">
+                <div class="time-row">
+                  <span id="currentTime">0:00</span>
+                  <span id="duration">0:00</span>
+                </div>
+                <input
+                  id="progressBar"
+                  type="range"
+                  min="0"
+                  max="100"
+                  value="0"
+                  aria-label="Track progress"
+                />
+              </div>
+            </div>
+
+            <div class="curation-card">
+              <p class="card-label">Room Notes</p>
+              <h3>Designed for immersive listening</h3>
+              <p class="muted">
+                Soft glow, tactile controls, and a library that feels more like
+                a members club than a file manager.
+              </p>
+
+              <div class="feature-list">
+                <div>
+                  <strong>Local Uploads</strong>
+                  <span>Your music stays in your browser session.</span>
+                </div>
+                <div>
+                  <strong>Responsive Motion</strong>
+                  <span>Subtle movement keeps the interface feeling alive.</span>
+                </div>
+                <div>
+                  <strong>Fast Control</strong>
+                  <span>Search, skip, scrub, and set volume instantly.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="library panel">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Library</p>
+              <h2>Your Playlist</h2>
+            </div>
+            <div class="library-tools">
+              <div class="library-search">
+                <input
+                  id="searchInput"
+                  type="search"
+                  placeholder="Search your playlist"
+                  aria-label="Search your playlist"
+                />
+              </div>
+              <button id="shuffleButton" class="ghost-button compact-button" type="button">
+                Shuffle
+              </button>
+            </div>
+          </div>
+
+          <div id="playlist" class="playlist" aria-live="polite"></div>
+        </section>
+
+        <section class="player-dock panel">
+          <div class="transport">
+            <button id="prevButton" class="control-button" type="button" aria-label="Previous track">
+              &#9664;&#9664;
+            </button>
+            <button id="playButton" class="play-button" type="button" aria-label="Play or pause">
+              Play
+            </button>
+            <button id="nextButton" class="control-button" type="button" aria-label="Next track">
+              &#9654;&#9654;
+            </button>
+          </div>
+
+          <div class="dock-meta">
+            <span id="dockTitle">Midnight Gold</span>
+            <span id="dockArtist">Veloura Session</span>
+          </div>
+
+          <div class="volume-shell">
+            <label for="volumeBar">Volume</label>
+            <input
+              id="volumeBar"
+              type="range"
+              min="0"
+              max="100"
+              value="72"
+              aria-label="Volume control"
+            />
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <audio id="audioPlayer" preload="metadata"></audio>
+    <script src="./app.js"></script>
+  </body>
+</html>
