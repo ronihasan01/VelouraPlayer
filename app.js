@@ -860,21 +860,60 @@ if (refs.spectrumShell) {
 }
 
 document.addEventListener("keydown", (event) => {
-  if (event.target instanceof HTMLInputElement) {
+  if (
+    event.target instanceof HTMLInputElement ||
+    event.target instanceof HTMLTextAreaElement ||
+    event.target instanceof HTMLSelectElement ||
+    event.target?.isContentEditable
+  ) {
     return;
   }
 
   if (event.code === "Space") {
     event.preventDefault();
     togglePlay();
+    return;
   }
 
-  if (event.code === "ArrowRight" && Number.isFinite(refs.audio.duration)) {
-    skipBy(10);
+  if (event.code === "ArrowRight") {
+    event.preventDefault();
+    setTrack(getNextIndex(), state.isPlaying);
+    return;
   }
 
-  if (event.code === "ArrowLeft" && Number.isFinite(refs.audio.duration)) {
-    skipBy(-10);
+  if (event.code === "ArrowLeft") {
+    event.preventDefault();
+    setTrack(getPreviousIndex(), state.isPlaying);
+    return;
+  }
+
+  if (event.code === "ArrowUp") {
+    event.preventDefault();
+    syncVolumeControls(Number(refs.volumeBar.value) + 5);
+    return;
+  }
+
+  if (event.code === "ArrowDown") {
+    event.preventDefault();
+    syncVolumeControls(Number(refs.volumeBar.value) - 5);
+    return;
+  }
+
+  if (event.code === "KeyM") {
+    event.preventDefault();
+    syncVolumeControls(refs.audio.volume > 0 ? 0 : 72);
+    return;
+  }
+
+  if (event.code === "KeyL") {
+    event.preventDefault();
+    toggleLoop();
+    return;
+  }
+
+  if (event.code === "KeyS") {
+    event.preventDefault();
+    toggleShuffle();
   }
 });
 
