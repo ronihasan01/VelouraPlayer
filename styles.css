@@ -342,62 +342,6 @@ body.theme-transition .background-glow {
   gap: 1rem;
 }
 
-.voice-console {
-  display: flex;
-  align-items: center;
-  gap: 0.9rem;
-  padding: 0.85rem 1rem;
-  border-radius: 20px;
-  border: 1px solid rgba(223, 195, 144, 0.1);
-  background: rgba(255, 255, 255, 0.025);
-  min-width: min(100%, 330px);
-}
-
-.voice-console-sidebar {
-  width: 100%;
-  min-width: 0;
-}
-
-.voice-button {
-  min-width: 82px;
-  padding: 0.8rem 1rem;
-  font-weight: 700;
-}
-
-.voice-button.listening {
-  border-color: rgba(223, 195, 144, 0.46);
-  background: rgba(223, 195, 144, 0.12);
-  box-shadow: 0 0 0 6px rgba(223, 195, 144, 0.06);
-}
-
-.voice-button.unsupported,
-.voice-button:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
-.voice-copy {
-  display: grid;
-  gap: 0.18rem;
-  min-width: 0;
-}
-
-.voice-status {
-  color: var(--gold);
-  font-size: 0.82rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.voice-transcript {
-  display: block;
-  max-width: 220px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: 0.94rem;
-}
-
 .search-shell input,
 .library-search input {
   width: min(320px, 54vw);
@@ -1051,14 +995,6 @@ input[type="range"] {
   .player-dock {
     flex-direction: column;
     align-items: stretch;
-  }
-
-  .voice-console {
-    min-width: 0;
-  }
-
-  .voice-transcript {
-    max-width: none;
   }
 
   .search-shell input,
