@@ -1026,6 +1026,13 @@ input[type="range"] {
     grid-template-columns: 1fr;
   }
 
+  #skipBackButton,
+  #skipForwardButton,
+  .featured-speed-card,
+  .curation-card {
+    display: none;
+  }
+
   .dock-meta {
     justify-items: start;
     text-align: left;

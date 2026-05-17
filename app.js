@@ -402,10 +402,26 @@ function updateTrackDetails() {
   refs.dockArtist.textContent = current.artist;
 }
 
+function updatePlaylistPlaybackState() {
+  refs.playlist.querySelectorAll(".playlist-card").forEach((card) => {
+    const index = Number(card.dataset.index);
+    const isActive = index === state.currentIndex;
+    const playButton = card.querySelector(".playlist-play");
+
+    card.classList.toggle("active", isActive);
+
+    if (playButton) {
+      playButton.textContent = isActive && state.isPlaying ? "Pause" : "Play";
+    }
+  });
+}
+
 function updatePlaybackState() {
-  refs.playButton.textContent = state.isPlaying ? "Pause" : "Play";
-  refs.featuredPlayButton.textContent = state.isPlaying ? "Pause" : "Play";
+  const playbackLabel = state.isPlaying ? "Pause" : "Play";
+  refs.playButton.textContent = playbackLabel;
+  refs.featuredPlayButton.textContent = playbackLabel;
   refs.body.classList.toggle("is-playing", state.isPlaying);
+  updatePlaylistPlaybackState();
 }
 
 function updateLoopState() {
@@ -548,13 +564,6 @@ function pauseCurrentTrack() {
   updatePlaybackState();
 }
 
-function speakableThemeName(theme) {
-  return theme
-    .split("-")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
-}
-
 function skipBy(seconds) {
   if (!Number.isFinite(refs.audio.duration)) {
     return;
@@ -608,8 +617,14 @@ function setTrack(index, shouldAutoplay = state.isPlaying) {
   refs.audio.playbackRate = state.playbackRate;
   refs.currentTime.textContent = "0:00";
   refs.progressBar.value = "0";
+
+  if (shouldAutoplay) {
+    state.isPlaying = true;
+  }
+
   updateTrackDetails();
   renderPlaylist();
+  updatePlaybackState();
 
   if (shouldAutoplay) {
     refs.audio
@@ -813,7 +828,6 @@ refs.playlist.addEventListener("click", (event) => {
   }
 
   state.isPlaying = true;
-  updatePlaybackState();
   setTrack(selectedIndex, true);
 });
 
