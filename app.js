@@ -5,8 +5,6 @@ const state = {
   isShuffle: false,
   isLooping: false,
   moodMode: "late-night",
-  voiceSupported: false,
-  voiceListening: false,
   search: "",
 };
 
@@ -40,9 +38,6 @@ const refs = {
   heroTitle: document.getElementById("heroTitle"),
   heroArtist: document.getElementById("heroArtist"),
   trackMeta: document.getElementById("trackMeta"),
-  voiceButton: document.getElementById("voiceButton"),
-  voiceStatus: document.getElementById("voiceStatus"),
-  voiceTranscript: document.getElementById("voiceTranscript"),
   dockTitle: document.getElementById("dockTitle"),
   dockArtist: document.getElementById("dockArtist"),
   trackCount: document.getElementById("trackCount"),
@@ -56,10 +51,7 @@ const rotatingThemes = ["late-night", "velvet-soul", "glass-house", "skyline-rid
 const autoThemeDelayMs = 5000;
 let autoThemeTimer = null;
 let themeTransitionTimer = null;
-const SpeechRecognitionConstructor = window.SpeechRecognition || window.webkitSpeechRecognition;
 const AudioContextConstructor = window.AudioContext || window.webkitAudioContext;
-let recognition = null;
-let voiceResetTimer = null;
 let audioContext = null;
 let mediaSourceNode = null;
 let analyserNode = null;
@@ -118,26 +110,6 @@ function includesAnyAlias(command, aliases) {
 
 function matchesAliasGroups(command, groups) {
   return groups.every((group) => includesAnyAlias(command, group));
-}
-
-function setVoiceFeedback(status, transcript, shouldReset = false) {
-  refs.voiceStatus.textContent = status;
-  refs.voiceTranscript.textContent = transcript;
-
-  if (voiceResetTimer) {
-    clearTimeout(voiceResetTimer);
-    voiceResetTimer = null;
-  }
-
-  if (shouldReset) {
-    voiceResetTimer = setTimeout(() => {
-      refs.voiceStatus.textContent = state.voiceSupported ? "Voice ready" : "Voice unavailable";
-      refs.voiceTranscript.textContent = state.voiceSupported
-        ? "Tap Voice, then say a command."
-        : "This browser does not support voice commands here.";
-      voiceResetTimer = null;
-    }, 3200);
-  }
 }
 
 function resizeSpectrumCanvas() {
@@ -583,22 +555,6 @@ function speakableThemeName(theme) {
     .join(" ");
 }
 
-function setVoiceListening(isListening) {
-  state.voiceListening = isListening;
-  refs.voiceButton.classList.toggle("listening", isListening);
-  refs.voiceButton.textContent = isListening ? "Listening" : "Voice";
-}
-
-function setVoiceSupport(isSupported) {
-  state.voiceSupported = isSupported;
-  refs.voiceButton.disabled = !isSupported;
-  refs.voiceButton.classList.toggle("unsupported", !isSupported);
-
-  if (!isSupported) {
-    setVoiceFeedback("Voice unavailable", "This browser does not support voice commands here.");
-  }
-}
-
 function skipBy(seconds) {
   if (!Number.isFinite(refs.audio.duration)) {
     return;
@@ -639,200 +595,6 @@ function findTrackIndexFromCommand(command) {
   });
 }
 
-function executeVoiceCommand(rawCommand) {
-  const command = normalizeCommandText(rawCommand);
-  const themeAliases = ["theme", "tim", "team", "thim", "mood", "mode"];
-  const autoAliases = ["auto", "oto", "otoh", "otto", "অটো"];
-  const shuffleAliases = ["shuffle", "shiffle", "suffle", "shufle", "শাফল"];
-  const loopAliases = ["loop", "lup", "lupe", "repeat", "রিপিট", "লুপ"];
-  const onAliases = ["on", "start", "enable", "চালু", "অন"];
-  const offAliases = ["off", "disable", "stop", "বন্ধ", "অফ"];
-  if (!command) {
-    return "I did not catch that.";
-  }
-
-  const playByTrackIndex = findTrackIndexFromCommand(command);
-  if (playByTrackIndex !== null && playByTrackIndex >= 0) {
-    state.isPlaying = true;
-    updatePlaybackState();
-    setTrack(playByTrackIndex, true);
-    return `Playing ${state.playlist[playByTrackIndex].title}.`;
-  }
-
-  if (/(^|\s)(play|resume|start|চালাও|চালু|শুরু)(\s|$)/u.test(command)) {
-    playCurrentTrack();
-    return "Playback started.";
-  }
-
-  if (/(^|\s)(pause|stop|থামাও|বন্ধ)(\s|$)/u.test(command)) {
-    pauseCurrentTrack();
-    return "Playback paused.";
-  }
-
-  if (/(next|skip next|পরের|নেক্সট)/u.test(command)) {
-    setTrack(getNextIndex(), state.isPlaying);
-    return "Playing next track.";
-  }
-
-  if (/(previous|prev|back song|আগের|পূর্বের)/u.test(command)) {
-    setTrack(getPreviousIndex(), state.isPlaying);
-    return "Playing previous track.";
-  }
-
-  if (/(skip forward|forward|ahead|সামনে যাও|এগিয়ে|এগিয়ে)/u.test(command) || /\+?\s*5\s*(second|seconds|sec|s)/u.test(command)) {
-    skipBy(5);
-    return "Skipped forward 5 seconds.";
-  }
-
-  if (/(skip back|backward|rewind|পিছনে যাও|পেছনে যাও|পিছাও)/u.test(command) || /-\s*5\s*(second|seconds|sec|s)/u.test(command)) {
-    skipBy(-5);
-    return "Skipped back 5 seconds.";
-  }
-
-  const volumeValue = parseVolumeCommand(command);
-  if (volumeValue !== null) {
-    syncVolumeControls(volumeValue);
-    return `Volume set to ${volumeValue} percent.`;
-  }
-
-  if (/(volume up|increase volume|লাউডার|জোরে|ভলিউম বাড়াও|ভলিউম বাড়াও)/u.test(command)) {
-    syncVolumeControls(Number(refs.volumeBar.value) + 10);
-    return `Volume ${refs.volumeBar.value} percent.`;
-  }
-
-  if (/(volume down|decrease volume|lower volume|আস্তে|কমাও|ভলিউম কমাও)/u.test(command)) {
-    syncVolumeControls(Number(refs.volumeBar.value) - 10);
-    return `Volume ${refs.volumeBar.value} percent.`;
-  }
-
-  if (/(mute|silent|চুপ|মিউট)/u.test(command)) {
-    syncVolumeControls(0);
-    return "Volume muted.";
-  }
-
-  if (
-    /(loop on|repeat on|loop play|লুপ চালু|রিপিট চালু)/u.test(command) ||
-    matchesAliasGroups(command, [loopAliases, onAliases])
-  ) {
-    setLoop(true);
-    return "Loop turned on.";
-  }
-
-  if (
-    /(loop off|repeat off|লুপ বন্ধ|রিপিট বন্ধ)/u.test(command) ||
-    matchesAliasGroups(command, [loopAliases, offAliases])
-  ) {
-    setLoop(false);
-    return "Loop turned off.";
-  }
-
-  if (
-    /(shuffle on|shuffle play|শাফল চালু|শাফল অন)/u.test(command) ||
-    matchesAliasGroups(command, [shuffleAliases, onAliases])
-  ) {
-    setShuffle(true);
-    return "Shuffle turned on.";
-  }
-
-  if (
-    /(shuffle off|শাফল বন্ধ|শাফল অফ)/u.test(command) ||
-    matchesAliasGroups(command, [shuffleAliases, offAliases])
-  ) {
-    setShuffle(false);
-    return "Shuffle turned off.";
-  }
-
-  if (/(speed|rate|স্পিড)\s*(0\.75|1(?:\.0)?|1\.25|1\.5)/u.test(command)) {
-    const speedMatch = command.match(/(0\.75|1(?:\.0)?|1\.25|1\.5)/);
-    if (speedMatch) {
-      syncSpeedControls(speedMatch[1]);
-      return `Speed set to ${refs.speedValue.textContent}.`;
-    }
-  }
-
-  const themeMatchers = [
-    {
-      pattern: /(auto mood|theme auto|tim auto|team auto|thim auto|mood auto|auto theme|auto tim|অটো|অটো থিম)/u,
-      aliases: [themeAliases, autoAliases],
-      theme: "auto",
-    },
-    {
-      pattern: /(late night|theme late night|tim late night|team late night|লেট নাইট)/u,
-      aliases: [themeAliases, ["late night", "late", "night", "লেট নাইট"]],
-      theme: "late-night",
-    },
-    {
-      pattern: /(velvet soul|theme velvet soul|tim velvet soul|team velvet soul|ভেলভেট সোল)/u,
-      aliases: [themeAliases, ["velvet soul", "velvet", "soul", "ভেলভেট সোল"]],
-      theme: "velvet-soul",
-    },
-    {
-      pattern: /(glass house|theme glass house|tim glass house|team glass house|গ্লাস হাউস)/u,
-      aliases: [themeAliases, ["glass house", "glass", "house", "গ্লাস হাউস"]],
-      theme: "glass-house",
-    },
-    {
-      pattern: /(skyline ride|theme skyline ride|tim skyline ride|team skyline ride|স্কাইলাইন রাইড)/u,
-      aliases: [themeAliases, ["skyline ride", "skyline", "ride", "স্কাইলাইন রাইড"]],
-      theme: "skyline-ride",
-    },
-  ];
-
-  for (const matcher of themeMatchers) {
-    if (matcher.pattern.test(command) || matchesAliasGroups(command, matcher.aliases)) {
-      updateTheme(matcher.theme);
-      return matcher.theme === "auto" ? "Auto mood started." : `Theme changed to ${speakableThemeName(matcher.theme)}.`;
-    }
-  }
-
-  return "Command not recognized.";
-}
-
-function initializeVoiceRecognition() {
-  if (!SpeechRecognitionConstructor) {
-    setVoiceSupport(false);
-    return;
-  }
-
-  recognition = new SpeechRecognitionConstructor();
-  recognition.lang = navigator.language || "en-US";
-  recognition.continuous = false;
-  recognition.interimResults = false;
-  recognition.maxAlternatives = 1;
-  setVoiceSupport(true);
-  setVoiceFeedback("Voice ready", "Try play, next, volume 50, loop on, or theme auto.");
-
-  recognition.addEventListener("start", () => {
-    setVoiceListening(true);
-    setVoiceFeedback("Listening", "Say a command...");
-  });
-
-  recognition.addEventListener("result", (event) => {
-    const transcript = event.results[0][0].transcript;
-    const message = executeVoiceCommand(transcript);
-    setVoiceFeedback("Heard", `${transcript} -> ${message}`, true);
-  });
-
-  recognition.addEventListener("error", (event) => {
-    const errorMessages = {
-      "not-allowed": "Microphone permission denied.",
-      "service-not-allowed": "Speech service is not allowed here.",
-      "no-speech": "No speech detected. Try again.",
-      "audio-capture": "No microphone detected.",
-      aborted: "Voice command stopped.",
-      network: "Network issue while recognizing speech.",
-    };
-
-    setVoiceFeedback("Voice error", errorMessages[event.error] || "Voice command failed.", true);
-  });
-
-  recognition.addEventListener("end", () => {
-    setVoiceListening(false);
-    if (refs.voiceStatus.textContent === "Listening" || refs.voiceStatus.textContent === "Voice ready") {
-      setVoiceFeedback("Voice ready", "Tap Voice, then say a command.");
-    }
-  });
-}
 
 function setTrack(index, shouldAutoplay = state.isPlaying) {
   const nextTrack = state.playlist[index];
@@ -1021,24 +783,6 @@ refs.moodButtons.forEach((button) => {
   });
 });
 
-refs.voiceButton.addEventListener("click", () => {
-  if (!state.voiceSupported || !recognition) {
-    return;
-  }
-
-  if (state.voiceListening) {
-    recognition.stop();
-    return;
-  }
-
-  setVoiceFeedback("Voice ready", "Listening for your command...");
-  try {
-    recognition.start();
-  } catch (error) {
-    setVoiceFeedback("Voice error", "Unable to start voice command right now.", true);
-  }
-});
-
 refs.audioUpload.addEventListener("change", (event) => {
   loadUploadedFiles(event.target.files);
   event.target.value = "";
@@ -1143,7 +887,6 @@ if (refs.spectrumShell) {
 }
 drawSpectrumIdle();
 runSpectrumLoop();
-initializeVoiceRecognition();
 state.playlist.forEach(primeTrackDuration);
 updateLibraryStats();
 renderPlaylist();
