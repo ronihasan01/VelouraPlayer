@@ -1,11 +1,15 @@
 const state = {
   playlist: [],
+  vaultTracks: [],
+  activeSource: "queue",
   currentIndex: 0,
   isPlaying: false,
   isShuffle: false,
   isLooping: false,
   moodMode: "late-night",
   search: "",
+  vaultSearch: "",
+  vaultSort: "custom",
 };
 
 const refs = {
@@ -20,7 +24,7 @@ const refs = {
   featuredNextButton: document.getElementById("featuredNextButton"),
   featuredLoopButton: document.getElementById("featuredLoopButton"),
   featuredShuffleButton: document.getElementById("featuredShuffleButton"),
-  shuffleButton: document.getElementById("shuffleButton"),
+  clearQueueButton: document.getElementById("clearQueueButton"),
   skipBackButton: document.getElementById("skipBackButton"),
   skipForwardButton: document.getElementById("skipForwardButton"),
   progressBar: document.getElementById("progressBar"),
@@ -35,19 +39,61 @@ const refs = {
   currentTime: document.getElementById("currentTime"),
   duration: document.getElementById("duration"),
   trackTitle: document.getElementById("trackTitle"),
-  heroTitle: document.getElementById("heroTitle"),
-  heroArtist: document.getElementById("heroArtist"),
+  quoteDisplay: document.getElementById("quoteDisplay"),
   trackMeta: document.getElementById("trackMeta"),
   dockTitle: document.getElementById("dockTitle"),
   dockArtist: document.getElementById("dockArtist"),
   trackCount: document.getElementById("trackCount"),
   playlistDuration: document.getElementById("playlistDuration"),
-  audioUpload: document.getElementById("audioUpload"),
+  audioUploadVault: document.getElementById("audioUploadVault"),
+  audioUploadQueue: document.getElementById("audioUploadQueue"),
   searchInput: document.getElementById("searchInput"),
+  libraryUploadPanel: document.getElementById("libraryUploadPanel"),
+  queuePanel: document.getElementById("queuePanel"),
+  vaultPanel: document.getElementById("vaultPanel"),
+  playbackSourceBadge: document.getElementById("playbackSourceBadge"),
+  sourceToggleBtn: document.getElementById("sourceToggleBtn"),
+  dockSourceBadge: document.getElementById("dockSourceBadge"),
+  vaultCountBadge: document.getElementById("vaultCountBadge"),
+  vaultSearchInput: document.getElementById("vaultSearchInput"),
+  vaultSortContainer: document.getElementById("vaultSortContainer"),
+  vaultSortToggleBtn: document.getElementById("vaultSortToggleBtn"),
+  vaultSortCurrentLabel: document.getElementById("vaultSortCurrentLabel"),
+  vaultSortMenu: document.getElementById("vaultSortMenu"),
+  playAllVaultBtn: document.getElementById("playAllVaultBtn"),
+  vaultTrackList: document.getElementById("vaultTrackList"),
 };
 
 state.playbackRate = 1;
 const rotatingThemes = ["late-night", "velvet-soul", "glass-house", "skyline-ride"];
+
+const musicQuotes = [
+  "“Let the music speak.”",
+  "“Lost in the rhythm.”",
+  "“Music heals the soul.”",
+  "“Sound is pure emotion.”",
+  "“Melody of the heart.”",
+  "“Live through the beat.”",
+  "“Breathe the harmony.”",
+  "“Music is pure magic.”",
+  "“In love with the sound.”",
+  "“Feel the living sound.”",
+  "“Where sound meets soul.”",
+  "“Infinite audio vibes.”"
+];
+
+let currentQuoteIndex = 0;
+
+function rotateMusicQuote() {
+  if (!refs.quoteDisplay) return;
+
+  refs.quoteDisplay.classList.add("fading");
+  setTimeout(() => {
+    currentQuoteIndex = (currentQuoteIndex + 1) % musicQuotes.length;
+    refs.quoteDisplay.textContent = musicQuotes[currentQuoteIndex];
+    refs.quoteDisplay.classList.remove("fading");
+  }, 520);
+}
 const autoThemeDelayMs = 5000;
 let autoThemeTimer = null;
 let themeTransitionTimer = null;
@@ -346,8 +392,17 @@ async function initializeSpectrumAnalyzer() {
   }
 }
 
+function getActiveTrackList() {
+  return state.activeSource === "vault" ? state.vaultTracks : state.playlist;
+}
+
+function getCurrentTrack() {
+  const list = getActiveTrackList();
+  return list[state.currentIndex] || null;
+}
+
 function activateSpectrumAnalyzer() {
-  const current = state.playlist[state.currentIndex];
+  const current = getCurrentTrack();
   if (!current || !isSpectrumCompatibleUrl(current.url)) {
     drawSpectrumIdle();
     return;
@@ -381,13 +436,56 @@ function alertNoTracks() {
   window.alert("Please add audio tracks first.");
 }
 
+function updateSourceIndicators() {
+  const isVault = state.activeSource === "vault";
+  const sourceName = isVault ? "Uploads Vault" : "Your Queue";
+
+  if (refs.playbackSourceBadge) {
+    refs.playbackSourceBadge.textContent = `Playing from: ${sourceName}`;
+  }
+
+  if (refs.sourceToggleBtn) {
+    refs.sourceToggleBtn.className = `source-toggle-btn ${isVault ? "source-vault" : "source-queue"}`;
+    refs.sourceToggleBtn.removeAttribute("title");
+  }
+
+  if (refs.dockSourceBadge) {
+    refs.dockSourceBadge.textContent = isVault ? "Vault" : "Queue";
+    refs.dockSourceBadge.className = `dock-source-badge ${isVault ? "source-vault" : "source-queue"}`;
+  }
+
+  if (refs.queuePanel) {
+    refs.queuePanel.classList.toggle("active-source-panel", !isVault);
+  }
+  if (refs.vaultPanel) {
+    refs.vaultPanel.classList.toggle("active-source-panel", isVault);
+  }
+}
+
+function togglePlaybackSource() {
+  if (state.activeSource === "queue") {
+    // Switch to Vault
+    if (!state.vaultTracks.length) {
+      window.alert("Your Uploads Vault is empty. Please upload some tracks to the Vault first.");
+      return;
+    }
+    setTrack(0, state.isPlaying, "vault");
+  } else {
+    // Switch to Queue
+    if (!state.playlist.length) {
+      window.alert("Your Queue is empty. Please add tracks from your Vault or local files first.");
+      return;
+    }
+    setTrack(0, state.isPlaying, "queue");
+  }
+}
+
 function updateTrackDetails() {
-  const current = state.playlist[state.currentIndex];
+  const current = getCurrentTrack();
+  updateSourceIndicators();
+
   if (!current) {
     refs.trackTitle.textContent = "No tracks loaded";
-    refs.heroTitle.textContent = "No tracks loaded";
-    refs.heroArtist.textContent = "Add music to get started";
-    refs.trackMeta.textContent = "Your browser session";
     refs.dockTitle.textContent = "No tracks loaded";
     refs.dockArtist.textContent = "Waiting for music";
     refs.duration.textContent = "0:00";
@@ -395,9 +493,6 @@ function updateTrackDetails() {
   }
 
   refs.trackTitle.textContent = current.title;
-  refs.heroTitle.textContent = current.title;
-  refs.heroArtist.textContent = current.artist;
-  refs.trackMeta.textContent = `${current.artist} • ${current.album || "Single"}`;
   refs.dockTitle.textContent = current.title;
   refs.dockArtist.textContent = current.artist;
 }
@@ -405,10 +500,34 @@ function updateTrackDetails() {
 function updatePlaylistPlaybackState() {
   refs.playlist.querySelectorAll(".playlist-card").forEach((card) => {
     const index = Number(card.dataset.index);
-    const isActive = index === state.currentIndex;
+    const isActive = state.activeSource === "queue" && index === state.currentIndex;
     const playButton = card.querySelector(".playlist-play");
+    const trackIndexBtn = card.querySelector(".track-index");
 
     card.classList.toggle("active", isActive);
+
+    if (trackIndexBtn) {
+      trackIndexBtn.classList.toggle("playing", isActive && state.isPlaying);
+      if (isActive && state.isPlaying) {
+        trackIndexBtn.innerHTML = `
+          <div class="mini-eq-bars" aria-hidden="true"><span></span><span></span><span></span></div>
+          <span class="track-remove-icon" aria-hidden="true">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+          </span>
+        `;
+      } else {
+        trackIndexBtn.innerHTML = `
+          <span class="track-num">${String(index + 1).padStart(2, "0")}</span>
+          <span class="track-remove-icon" aria-hidden="true">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+          </span>
+        `;
+      }
+    }
 
     if (playButton) {
       playButton.textContent = isActive && state.isPlaying ? "Pause" : "Play";
@@ -422,6 +541,7 @@ function updatePlaybackState() {
   refs.featuredPlayButton.textContent = playbackLabel;
   refs.body.classList.toggle("is-playing", state.isPlaying);
   updatePlaylistPlaybackState();
+  renderVault();
 }
 
 function updateLoopState() {
@@ -451,13 +571,18 @@ function triggerThemeTransition() {
   themeTransitionTimer = setTimeout(() => {
     refs.body.classList.remove("theme-transition");
     themeTransitionTimer = null;
-  }, 820);
+  }, 1200);
 }
 
 function applyTheme(theme) {
   state.theme = theme;
   triggerThemeTransition();
   refs.body.dataset.theme = theme;
+  if (state.isPlaying) {
+    drawSpectrum();
+  } else {
+    drawSpectrumIdle();
+  }
 }
 
 function updateMoodButtons(mode) {
@@ -504,8 +629,9 @@ function updateTheme(theme) {
 }
 
 function updateShuffleState() {
-  refs.shuffleButton.classList.toggle("active", state.isShuffle);
-  refs.featuredShuffleButton.classList.toggle("active", state.isShuffle);
+  if (refs.featuredShuffleButton) {
+    refs.featuredShuffleButton.classList.toggle("active", state.isShuffle);
+  }
 }
 
 function setShuffle(enabled) {
@@ -533,12 +659,26 @@ function syncSpeedControls(value) {
 }
 
 function playCurrentTrack() {
-  if (!state.playlist.length) {
+  let list = getActiveTrackList();
+  if (!list.length) {
+    if (state.activeSource === "queue" && state.vaultTracks.length > 0) {
+      setTrack(0, true, "vault");
+      return Promise.resolve(true);
+    } else if (state.activeSource === "vault" && state.playlist.length > 0) {
+      setTrack(0, true, "queue");
+      return Promise.resolve(true);
+    }
     return Promise.resolve(false);
   }
 
-  if (!refs.audio.src) {
-    setTrack(state.currentIndex, true);
+  const track = list[state.currentIndex];
+  if (track && track.blob && (!track.url || refs.audio.src === "")) {
+    track.url = URL.createObjectURL(track.blob);
+    refs.audio.src = track.url;
+  }
+
+  if (!refs.audio.src || refs.audio.src === window.location.href) {
+    setTrack(state.currentIndex, true, state.activeSource);
     return Promise.resolve(true);
   }
 
@@ -547,7 +687,23 @@ function playCurrentTrack() {
     updatePlaybackState();
     activateSpectrumAnalyzer();
     return true;
-  }).catch(() => {
+  }).catch((err) => {
+    console.warn("Audio play failed, refreshing ObjectURL:", err);
+    if (track && track.blob) {
+      track.url = URL.createObjectURL(track.blob);
+      refs.audio.src = track.url;
+      return refs.audio.play().then(() => {
+        state.isPlaying = true;
+        updatePlaybackState();
+        activateSpectrumAnalyzer();
+        return true;
+      }).catch((e2) => {
+        console.error("Retry failed:", e2);
+        state.isPlaying = false;
+        updatePlaybackState();
+        return false;
+      });
+    }
     state.isPlaying = false;
     updatePlaybackState();
     return false;
@@ -605,10 +761,18 @@ function findTrackIndexFromCommand(command) {
 }
 
 
-function setTrack(index, shouldAutoplay = state.isPlaying) {
-  const nextTrack = state.playlist[index];
+function setTrack(index, shouldAutoplay = state.isPlaying, source = state.activeSource) {
+  state.activeSource = source;
+  const list = getActiveTrackList();
+  const nextTrack = list[index];
   if (!nextTrack) {
     return;
+  }
+
+  if (nextTrack.blob) {
+    if (!nextTrack.url) {
+      nextTrack.url = URL.createObjectURL(nextTrack.blob);
+    }
   }
 
   state.currentIndex = index;
@@ -618,15 +782,13 @@ function setTrack(index, shouldAutoplay = state.isPlaying) {
   refs.currentTime.textContent = "0:00";
   refs.progressBar.value = "0";
 
-  if (shouldAutoplay) {
-    state.isPlaying = true;
-  }
-
   updateTrackDetails();
   renderPlaylist();
-  updatePlaybackState();
+  renderVault();
 
   if (shouldAutoplay) {
+    state.isPlaying = true;
+    updatePlaybackState();
     refs.audio
       .play()
       .then(() => {
@@ -634,21 +796,48 @@ function setTrack(index, shouldAutoplay = state.isPlaying) {
         updatePlaybackState();
         activateSpectrumAnalyzer();
       })
-      .catch(() => {
-        state.isPlaying = false;
-        updatePlaybackState();
+      .catch((err) => {
+        console.warn("Autoplay failed, regenerating Blob URL:", err);
+        if (nextTrack.blob) {
+          nextTrack.url = URL.createObjectURL(nextTrack.blob);
+          refs.audio.src = nextTrack.url;
+          refs.audio
+            .play()
+            .then(() => {
+              state.isPlaying = true;
+              updatePlaybackState();
+              activateSpectrumAnalyzer();
+            })
+            .catch(() => {
+              state.isPlaying = false;
+              updatePlaybackState();
+            });
+        } else {
+          state.isPlaying = false;
+          updatePlaybackState();
+        }
       });
+  } else {
+    updatePlaybackState();
   }
 }
 
 function togglePlay() {
-  if (!state.playlist.length) {
+  let list = getActiveTrackList();
+  if (!list.length) {
+    if (state.activeSource === "queue" && state.vaultTracks.length > 0) {
+      setTrack(0, true, "vault");
+      return;
+    } else if (state.activeSource === "vault" && state.playlist.length > 0) {
+      setTrack(0, true, "queue");
+      return;
+    }
     alertNoTracks();
     return;
   }
 
-  if (!refs.audio.src) {
-    setTrack(state.currentIndex, true);
+  if (!refs.audio.src || refs.audio.src === window.location.href) {
+    setTrack(state.currentIndex, true, state.activeSource);
     return;
   }
 
@@ -660,40 +849,100 @@ function togglePlay() {
 }
 
 function getNextIndex() {
-  if (!state.playlist.length) {
+  const list = getActiveTrackList();
+  if (!list.length) {
     return 0;
   }
 
-  if (state.isShuffle && state.playlist.length > 1) {
+  if (state.isShuffle && list.length > 1) {
     let candidate = state.currentIndex;
     while (candidate === state.currentIndex) {
-      candidate = Math.floor(Math.random() * state.playlist.length);
+      candidate = Math.floor(Math.random() * list.length);
     }
     return candidate;
   }
 
-  return (state.currentIndex + 1) % state.playlist.length;
+  return (state.currentIndex + 1) % list.length;
 }
 
 function getPreviousIndex() {
-  if (!state.playlist.length) {
+  const list = getActiveTrackList();
+  if (!list.length) {
     return 0;
   }
 
-  return (state.currentIndex - 1 + state.playlist.length) % state.playlist.length;
+  return (state.currentIndex - 1 + list.length) % list.length;
+}
+
+function removeTrack(index) {
+  if (index < 0 || index >= state.playlist.length) {
+    return;
+  }
+
+  const trackToRemove = state.playlist[index];
+  if (trackToRemove && trackToRemove.url && trackToRemove.url.startsWith("blob:")) {
+    URL.revokeObjectURL(trackToRemove.url);
+  }
+
+  const wasPlaying = state.isPlaying && state.activeSource === "queue";
+  const isCurrentTrack = state.activeSource === "queue" && index === state.currentIndex;
+
+  state.playlist.splice(index, 1);
+
+  if (state.activeSource === "queue") {
+    if (!state.playlist.length) {
+      state.currentIndex = 0;
+      state.isPlaying = false;
+      refs.audio.pause();
+      refs.audio.removeAttribute("src");
+      refs.audio.load();
+      refs.currentTime.textContent = "0:00";
+      refs.duration.textContent = "0:00";
+      refs.progressBar.value = "0";
+      drawSpectrumIdle();
+      updateTrackDetails();
+      updatePlaybackState();
+      updateLibraryStats();
+      renderPlaylist();
+      return;
+    }
+
+    if (isCurrentTrack) {
+      if (state.currentIndex >= state.playlist.length) {
+        state.currentIndex = 0;
+      }
+      setTrack(state.currentIndex, wasPlaying, "queue");
+    } else {
+      if (index < state.currentIndex) {
+        state.currentIndex -= 1;
+      }
+      updateLibraryStats();
+      renderPlaylist();
+      updatePlaybackState();
+    }
+  } else {
+    updateLibraryStats();
+    renderPlaylist();
+  }
 }
 
 function renderPlaylist() {
   const visibleTracks = getVisibleTracks();
+
+  if (refs.libraryUploadPanel) {
+    refs.libraryUploadPanel.style.display = state.playlist.length > 0 ? "flex" : "none";
+  }
+
+  updateBadges();
 
   if (!visibleTracks.length) {
     refs.playlist.innerHTML = state.playlist.length
       ? '<div class="playlist-empty">No matching tracks yet. Try another search.</div>'
       : `
         <div class="playlist-empty playlist-empty-rich">
-          <strong>No audio tracks yet.</strong>
-          <span>Add your songs to start building the Veloura playlist.</span>
-          <label class="playlist-empty-action" for="audioUpload">Add Audio Tracks</label>
+          <strong>No audio tracks in queue.</strong>
+          <span>Add songs from your Vault or add new local ones.</span>
+          <label class="playlist-empty-action" for="audioUploadQueue">Add Audio Tracks</label>
         </div>
       `;
     return;
@@ -701,16 +950,36 @@ function renderPlaylist() {
 
   refs.playlist.innerHTML = visibleTracks
     .map(({ track, index }, visibleIndex) => {
-      const isActive = index === state.currentIndex;
+      const isActive = state.activeSource === "queue" && index === state.currentIndex;
       return `
-        <article class="playlist-card ${isActive ? "active" : ""}" data-index="${index}">
-          <div class="track-index">${String(visibleIndex + 1).padStart(2, "0")}</div>
+        <article class="playlist-card ${isActive ? "active" : ""}" data-index="${index}" draggable="true" title="Drag to reorder">
+          <div class="drag-handle" title="Drag to change order" aria-hidden="true">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+              <circle cx="8" cy="6" r="2"></circle>
+              <circle cx="16" cy="6" r="2"></circle>
+              <circle cx="8" cy="12" r="2"></circle>
+              <circle cx="16" cy="12" r="2"></circle>
+              <circle cx="8" cy="18" r="2"></circle>
+              <circle cx="16" cy="18" r="2"></circle>
+            </svg>
+          </div>
+          <button class="track-index ${isActive && state.isPlaying ? "playing" : ""}" type="button" data-action="remove" draggable="false" title="Remove track from queue" aria-label="Remove track ${visibleIndex + 1}">
+            ${isActive && state.isPlaying
+              ? `<div class="mini-eq-bars" aria-hidden="true"><span></span><span></span><span></span></div>`
+              : `<span class="track-num">${String(visibleIndex + 1).padStart(2, "0")}</span>`
+            }
+            <span class="track-remove-icon" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+            </span>
+          </button>
           <div class="playlist-copy">
             <strong>${track.title}</strong>
-            <span>${track.artist} • ${track.album || "Single"}</span>
+            <span class="track-duration-sub">${formatTime(track.duration)}</span>
           </div>
           <span class="track-duration">${formatTime(track.duration)}</span>
-          <button class="playlist-play" type="button" data-action="play">
+          <button class="playlist-play" type="button" data-action="play" draggable="false">
             ${isActive && state.isPlaying ? "Pause" : "Play"}
           </button>
         </article>
@@ -719,38 +988,435 @@ function renderPlaylist() {
     .join("");
 }
 
-function loadUploadedFiles(files) {
-  const tracks = Array.from(files)
-    .filter((file) => file.type.startsWith("audio/"))
-    .map((file) => ({
-      title: file.name.replace(/\.[^.]+$/, ""),
-      artist: "Local Upload",
-      album: "Your Session",
-      url: URL.createObjectURL(file),
-    }));
+// --- INDEXED DB VAULT STORAGE ---
+const DB_NAME = "VelouraVaultDB";
+const DB_VERSION = 1;
+const STORE_NAME = "vault_tracks";
 
-  if (!tracks.length) {
+function openVaultDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME, { keyPath: "id" });
+      }
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function getStoredVaultTracks() {
+  try {
+    const db = await openVaultDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, "readonly");
+      const store = tx.objectStore(STORE_NAME);
+      const req = store.getAll();
+      req.onsuccess = () => resolve(req.result || []);
+      req.onerror = () => reject(req.error);
+    });
+  } catch (err) {
+    console.error("Failed to fetch vault tracks:", err);
+    return [];
+  }
+}
+
+async function saveVaultTrackToDB(trackData) {
+  try {
+    const db = await openVaultDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, "readwrite");
+      const store = tx.objectStore(STORE_NAME);
+      const req = store.put(trackData);
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
+  } catch (err) {
+    console.error("Failed to save vault track:", err);
+  }
+}
+
+async function deleteVaultTrackFromDB(id) {
+  try {
+    const db = await openVaultDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, "readwrite");
+      const store = tx.objectStore(STORE_NAME);
+      const req = store.delete(id);
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
+  } catch (err) {
+    console.error("Failed to delete vault track:", err);
+  }
+}
+
+async function saveAllVaultTracksOrder(tracks) {
+  try {
+    const db = await openVaultDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, "readwrite");
+      const store = tx.objectStore(STORE_NAME);
+      tracks.forEach((track, index) => {
+        track.order = index;
+        store.put(track);
+      });
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  } catch (err) {
+    console.error("Failed to save vault order:", err);
+  }
+}
+
+async function loadVaultFromDB() {
+  const stored = await getStoredVaultTracks();
+  stored.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  stored.forEach((track, index) => {
+    track.order = index;
+    if (track.blob) {
+      track.url = URL.createObjectURL(track.blob);
+    }
+  });
+  state.vaultTracks = stored;
+  renderVault();
+  updateBadges();
+
+  // If queue has no tracks and vault has tracks, initialize the first vault track on the player!
+  if (state.playlist.length === 0 && state.vaultTracks.length > 0 && !refs.audio.src) {
+    setTrack(0, false, "vault");
+  }
+}
+
+function updateBadges() {
+  if (refs.vaultCountBadge) {
+    refs.vaultCountBadge.textContent = `${state.vaultTracks.length} Track${state.vaultTracks.length === 1 ? "" : "s"}`;
+  }
+}
+
+function getVisibleVaultTracks() {
+  const query = state.vaultSearch.trim().toLowerCase();
+  let tracks = [...state.vaultTracks];
+
+  if (query) {
+    tracks = tracks.filter((track) => {
+      const title = (track.title || "").toLowerCase();
+      const artist = (track.artist || "").toLowerCase();
+      const album = (track.album || "").toLowerCase();
+      return title.includes(query) || artist.includes(query) || album.includes(query);
+    });
+  }
+
+  switch (state.vaultSort) {
+    case "title-asc":
+      tracks.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
+      break;
+    case "title-desc":
+      tracks.sort((a, b) => (b.title || "").localeCompare(a.title || ""));
+      break;
+    case "duration-asc":
+      tracks.sort((a, b) => (a.duration || 0) - (b.duration || 0));
+      break;
+    case "duration-desc":
+      tracks.sort((a, b) => (b.duration || 0) - (a.duration || 0));
+      break;
+    case "newest":
+      tracks.sort((a, b) => (b.order ?? 0) - (a.order ?? 0));
+      break;
+    case "custom":
+    default:
+      tracks.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+      break;
+  }
+
+  return tracks;
+}
+
+function renderVault() {
+  if (!refs.vaultTrackList) return;
+
+  const visible = getVisibleVaultTracks();
+  updateBadges();
+
+  if (!state.vaultTracks.length) {
+    refs.vaultTrackList.innerHTML = `
+      <div class="playlist-empty" style="grid-column: 1 / -1;">
+        <strong>Your Vault is empty.</strong>
+        <p style="margin: 0.35rem 0 0; font-size: 0.84rem; color: var(--muted);">Click the banner above to upload your favorite tracks and save them permanently in your browser.</p>
+      </div>
+    `;
     return;
   }
 
-  if (!state.playlist.length) {
-    state.currentIndex = 0;
+  if (!visible.length) {
+    refs.vaultTrackList.innerHTML = `
+      <div class="playlist-empty" style="grid-column: 1 / -1;">
+        <strong>No matching vault tracks.</strong>
+        <p style="margin: 0.35rem 0 0; font-size: 0.84rem; color: var(--muted);">Try a different search query.</p>
+      </div>
+    `;
+    return;
   }
 
-  state.playlist = state.playlist.concat(tracks);
+  const currentPlayingTrack = getCurrentTrack();
 
-  tracks.forEach(primeTrackDuration);
+  refs.vaultTrackList.innerHTML = visible
+    .map((track) => {
+      const isCurrentlyActive = state.activeSource === "vault" && currentPlayingTrack && currentPlayingTrack.id === track.id;
+      const actualIndex = state.vaultTracks.findIndex((t) => t.id === track.id);
+
+      return `
+        <article class="vault-card ${isCurrentlyActive ? "active" : ""}" data-vault-id="${track.id}" data-index="${actualIndex}" draggable="true" title="Drag to reorder">
+          <div class="drag-handle" title="Drag to change order" aria-hidden="true">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+              <circle cx="8" cy="6" r="2"></circle>
+              <circle cx="16" cy="6" r="2"></circle>
+              <circle cx="8" cy="12" r="2"></circle>
+              <circle cx="16" cy="12" r="2"></circle>
+              <circle cx="8" cy="18" r="2"></circle>
+              <circle cx="16" cy="18" r="2"></circle>
+            </svg>
+          </div>
+          <button class="vault-play-btn ${isCurrentlyActive && state.isPlaying ? "playing" : ""}" type="button" data-action="play-vault" draggable="false" title="${isCurrentlyActive && state.isPlaying ? "Pause" : "Play"}">
+            ${isCurrentlyActive && state.isPlaying
+              ? `<div class="mini-eq-bars" aria-hidden="true"><span></span><span></span><span></span></div>`
+              : `<span class="play-icon">▶</span>`
+            }
+          </button>
+          <div class="vault-card-info">
+            <strong class="vault-track-title">${track.title}</strong>
+            <span class="vault-duration">${formatTime(track.duration)}</span>
+          </div>
+          <div class="vault-card-actions">
+            <button class="vault-queue-btn" type="button" data-action="queue-vault" draggable="false" title="Add to active queue">
+              + Queue
+            </button>
+            <button class="vault-delete-btn" type="button" data-action="delete-vault" draggable="false" title="Delete from vault" aria-label="Delete song">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+            </button>
+          </div>
+        </article>
+      `;
+    })
+    .join("");
+}
+
+function playVaultTrackDirectly(vaultTrackId) {
+  const vaultIndex = state.vaultTracks.findIndex((t) => t.id === vaultTrackId);
+  if (vaultIndex === -1) return;
+
+  const currentPlayingTrack = getCurrentTrack();
+  if (state.activeSource === "vault" && currentPlayingTrack && currentPlayingTrack.id === vaultTrackId) {
+    togglePlay();
+    renderVault();
+    return;
+  }
+
+  // Play directly from vault without altering Your Queue!
+  setTrack(vaultIndex, true, "vault");
+}
+
+function playAllVaultTracks() {
+  if (!state.vaultTracks.length) {
+    alertNoTracks();
+    return;
+  }
+
+  // Play all vault tracks directly without modifying Your Queue!
+  setTrack(0, true, "vault");
+}
+
+function showToast(message, icon = "✓") {
+  let container = document.querySelector(".veloura-toast-container");
+  if (!container) {
+    container = document.createElement("div");
+    container.className = "veloura-toast-container";
+    document.body.appendChild(container);
+  }
+
+  const toast = document.createElement("div");
+  toast.className = "veloura-toast";
+  toast.innerHTML = `
+    <span class="veloura-toast-icon">${icon}</span>
+    <span>${message}</span>
+  `;
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.classList.add("toast-hiding");
+    setTimeout(() => {
+      toast.remove();
+      if (!container.children.length) {
+        container.remove();
+      }
+    }, 360);
+  }, 2400);
+}
+
+function addVaultTrackToPlaylist(vaultTrackId, queueBtnElement) {
+  const vaultTrack = state.vaultTracks.find((t) => t.id === vaultTrackId);
+  if (!vaultTrack) return;
+
+  const audioUrl = URL.createObjectURL(vaultTrack.blob);
+  const wasEmpty = state.playlist.length === 0;
+
+  state.playlist.push({
+    id: vaultTrack.id,
+    title: vaultTrack.title,
+    artist: vaultTrack.artist,
+    album: vaultTrack.album || "Vault Track",
+    duration: vaultTrack.duration || 0,
+    url: audioUrl,
+  });
+
   updateLibraryStats();
   renderPlaylist();
-  setTrack(state.currentIndex, false);
+
+  if (wasEmpty && state.activeSource === "queue") {
+    state.currentIndex = 0;
+    setTrack(0, false, "queue");
+  }
+
+  const btn = queueBtnElement || document.querySelector(`.vault-card[data-vault-id="${vaultTrackId}"] .vault-queue-btn`);
+  if (btn) {
+    btn.classList.add("added");
+    btn.textContent = "✓ Added";
+    setTimeout(() => {
+      btn.classList.remove("added");
+      btn.textContent = "+ Queue";
+    }, 1800);
+  }
+
+  showToast(`Added "${vaultTrack.title}" to Your Queue`);
+}
+
+function clearQueue() {
+  state.playlist.forEach((track) => {
+    if (track && track.url && track.url.startsWith("blob:")) {
+      URL.revokeObjectURL(track.url);
+    }
+  });
+
+  state.playlist = [];
+
+  if (state.activeSource === "queue") {
+    state.currentIndex = 0;
+    state.isPlaying = false;
+    refs.audio.pause();
+    refs.audio.removeAttribute("src");
+    refs.audio.load();
+    refs.currentTime.textContent = "0:00";
+    refs.duration.textContent = "0:00";
+    refs.progressBar.value = "0";
+    drawSpectrumIdle();
+    updateTrackDetails();
+  }
+
+  updateLibraryStats();
+  renderPlaylist();
+  updatePlaybackState();
+}
+
+async function deleteVaultTrack(vaultTrackId) {
+  await deleteVaultTrackFromDB(vaultTrackId);
+  await loadVaultFromDB();
+}
+
+async function loadUploadedFiles(files) {
+  const audioFiles = Array.from(files).filter((file) => file.type.startsWith("audio/"));
+  if (!audioFiles.length) {
+    return;
+  }
+
+  for (let i = 0; i < audioFiles.length; i++) {
+    const file = audioFiles[i];
+    const id = "track_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
+    const trackItem = {
+      id,
+      title: file.name.replace(/\.[^.]+$/, ""),
+      artist: "Local Upload",
+      album: "Music Vault",
+      size: file.size,
+      blob: file,
+      duration: 0,
+      order: state.vaultTracks.length + i,
+    };
+
+    // Calculate duration
+    const tempUrl = URL.createObjectURL(file);
+    const audioProbe = new Audio();
+    audioProbe.src = tempUrl;
+    await new Promise((resolve) => {
+      audioProbe.addEventListener("loadedmetadata", () => {
+        trackItem.duration = audioProbe.duration || 0;
+        resolve();
+      }, { once: true });
+      audioProbe.addEventListener("error", () => resolve(), { once: true });
+    });
+    URL.revokeObjectURL(tempUrl);
+
+    // Save to IndexedDB
+    await saveVaultTrackToDB(trackItem);
+  }
+
+  // Reload vault from IndexedDB
+  await loadVaultFromDB();
+}
+
+async function loadQueueFiles(files) {
+  const audioFiles = Array.from(files).filter((file) => file.type.startsWith("audio/"));
+  if (!audioFiles.length) {
+    return;
+  }
+
+  const wasEmpty = state.playlist.length === 0;
+
+  for (const file of audioFiles) {
+    const id = "queue_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
+    const url = URL.createObjectURL(file);
+    const trackItem = {
+      id,
+      title: file.name.replace(/\.[^.]+$/, ""),
+      artist: "Local Track",
+      album: "Temporary Queue",
+      size: file.size,
+      duration: 0,
+      url,
+    };
+
+    // Calculate duration
+    const audioProbe = new Audio();
+    audioProbe.src = url;
+    await new Promise((resolve) => {
+      audioProbe.addEventListener("loadedmetadata", () => {
+        trackItem.duration = audioProbe.duration || 0;
+        resolve();
+      }, { once: true });
+      audioProbe.addEventListener("error", () => resolve(), { once: true });
+    });
+
+    state.playlist.push(trackItem);
+  }
+
+  updateLibraryStats();
+  renderPlaylist();
+
+  if (wasEmpty && state.playlist.length > 0) {
+    setTrack(0, false, "queue");
+  }
 }
 
 refs.playButton.addEventListener("click", togglePlay);
 refs.featuredPlayButton.addEventListener("click", togglePlay);
-refs.prevButton.addEventListener("click", () => setTrack(getPreviousIndex(), state.isPlaying));
-refs.featuredPrevButton.addEventListener("click", () => setTrack(getPreviousIndex(), state.isPlaying));
-refs.nextButton.addEventListener("click", () => setTrack(getNextIndex(), state.isPlaying));
-refs.featuredNextButton.addEventListener("click", () => setTrack(getNextIndex(), state.isPlaying));
+refs.prevButton.addEventListener("click", () => setTrack(getPreviousIndex(), state.isPlaying, state.activeSource));
+refs.featuredPrevButton.addEventListener("click", () => setTrack(getPreviousIndex(), state.isPlaying, state.activeSource));
+refs.nextButton.addEventListener("click", () => setTrack(getNextIndex(), state.isPlaying, state.activeSource));
+refs.featuredNextButton.addEventListener("click", () => setTrack(getNextIndex(), state.isPlaying, state.activeSource));
 
 function toggleShuffle() {
   setShuffle(!state.isShuffle);
@@ -760,9 +1426,15 @@ function toggleLoop() {
   setLoop(!state.isLooping);
 }
 
-refs.shuffleButton.addEventListener("click", toggleShuffle);
-refs.featuredShuffleButton.addEventListener("click", toggleShuffle);
-refs.featuredLoopButton.addEventListener("click", toggleLoop);
+if (refs.clearQueueButton) {
+  refs.clearQueueButton.addEventListener("click", clearQueue);
+}
+if (refs.featuredShuffleButton) {
+  refs.featuredShuffleButton.addEventListener("click", toggleShuffle);
+}
+if (refs.featuredLoopButton) {
+  refs.featuredLoopButton.addEventListener("click", toggleLoop);
+}
 refs.skipBackButton.addEventListener("click", () => skipBy(-5));
 refs.skipForwardButton.addEventListener("click", () => skipBy(5));
 
@@ -798,17 +1470,42 @@ refs.moodButtons.forEach((button) => {
   });
 });
 
-refs.audioUpload.addEventListener("change", (event) => {
-  loadUploadedFiles(event.target.files);
-  event.target.value = "";
-});
+if (refs.audioUploadVault) {
+  refs.audioUploadVault.addEventListener("change", (event) => {
+    loadUploadedFiles(event.target.files);
+    event.target.value = "";
+  });
+}
 
-refs.searchInput.addEventListener("input", (event) => {
-  state.search = event.target.value;
-  renderPlaylist();
-});
+if (refs.audioUploadQueue) {
+  refs.audioUploadQueue.addEventListener("change", (event) => {
+    loadQueueFiles(event.target.files);
+    event.target.value = "";
+  });
+}
+
+if (refs.searchInput) {
+  refs.searchInput.addEventListener("input", (event) => {
+    state.search = event.target.value;
+    renderPlaylist();
+  });
+}
+
+if (refs.sourceToggleBtn) {
+  refs.sourceToggleBtn.addEventListener("click", togglePlaybackSource);
+}
 
 refs.playlist.addEventListener("click", (event) => {
+  const removeTrigger = event.target.closest('[data-action="remove"]');
+  if (removeTrigger) {
+    event.stopPropagation();
+    const card = removeTrigger.closest(".playlist-card");
+    if (card) {
+      removeTrack(Number(card.dataset.index));
+    }
+    return;
+  }
+
   const trigger = event.target.closest(".playlist-card, .playlist-play");
   if (!trigger) {
     return;
@@ -820,7 +1517,7 @@ refs.playlist.addEventListener("click", (event) => {
   }
 
   const selectedIndex = Number(card.dataset.index);
-  const isCurrentTrack = selectedIndex === state.currentIndex;
+  const isCurrentTrack = state.activeSource === "queue" && selectedIndex === state.currentIndex;
 
   if (isCurrentTrack) {
     togglePlay();
@@ -828,7 +1525,7 @@ refs.playlist.addEventListener("click", (event) => {
   }
 
   state.isPlaying = true;
-  setTrack(selectedIndex, true);
+  setTrack(selectedIndex, true, "queue");
 });
 
 refs.audio.addEventListener("timeupdate", () => {
@@ -844,7 +1541,7 @@ refs.audio.addEventListener("timeupdate", () => {
 });
 
 refs.audio.addEventListener("loadedmetadata", () => {
-  const current = state.playlist[state.currentIndex];
+  const current = getCurrentTrack();
   if (current) {
     current.duration = refs.audio.duration;
   }
@@ -855,11 +1552,15 @@ refs.audio.addEventListener("loadedmetadata", () => {
 });
 
 refs.audio.addEventListener("ended", () => {
-  setTrack(getNextIndex(), true);
+  setTrack(getNextIndex(), true, state.activeSource);
 });
 
 window.addEventListener("resize", () => {
-  drawSpectrum();
+  if (state.isPlaying) {
+    drawSpectrum();
+  } else {
+    drawSpectrumIdle();
+  }
 });
 
 if (refs.spectrumShell) {
@@ -891,13 +1592,13 @@ document.addEventListener("keydown", (event) => {
 
   if (event.code === "ArrowRight") {
     event.preventDefault();
-    setTrack(getNextIndex(), state.isPlaying);
+    setTrack(getNextIndex(), state.isPlaying, state.activeSource);
     return;
   }
 
   if (event.code === "ArrowLeft") {
     event.preventDefault();
-    setTrack(getPreviousIndex(), state.isPlaying);
+    setTrack(getPreviousIndex(), state.isPlaying, state.activeSource);
     return;
   }
 
@@ -931,6 +1632,333 @@ document.addEventListener("keydown", (event) => {
   }
 });
 
+if (refs.vaultSearchInput) {
+  refs.vaultSearchInput.addEventListener("input", (event) => {
+    state.vaultSearch = event.target.value;
+    renderVault();
+  });
+}
+
+function setupVaultSortDropdown() {
+  if (!refs.vaultSortToggleBtn || !refs.vaultSortMenu) return;
+
+  const sortLabels = {
+    custom: "Sort: Default",
+    "title-asc": "Title (A → Z)",
+    "title-desc": "Title (Z → A)",
+    "duration-asc": "Duration ↑",
+    "duration-desc": "Duration ↓",
+    newest: "Recently Added",
+  };
+
+  refs.vaultSortToggleBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const isOpen = refs.vaultSortContainer.classList.toggle("open");
+    refs.vaultSortToggleBtn.setAttribute("aria-expanded", String(isOpen));
+  });
+
+  refs.vaultSortMenu.addEventListener("click", (e) => {
+    const option = e.target.closest(".vault-sort-option");
+    if (!option) return;
+    e.stopPropagation();
+
+    const sortValue = option.dataset.value;
+    state.vaultSort = sortValue;
+
+    // Update active class on options
+    refs.vaultSortMenu.querySelectorAll(".vault-sort-option").forEach((opt) => {
+      const isSelected = opt.dataset.value === sortValue;
+      opt.classList.toggle("active", isSelected);
+      opt.setAttribute("aria-selected", String(isSelected));
+    });
+
+    // Update button label
+    if (refs.vaultSortCurrentLabel) {
+      refs.vaultSortCurrentLabel.textContent = sortLabels[sortValue] || "Sort: Default";
+    }
+
+    // Close menu
+    refs.vaultSortContainer.classList.remove("open");
+    refs.vaultSortToggleBtn.setAttribute("aria-expanded", "false");
+
+    renderVault();
+  });
+
+  // Close when clicking outside
+  document.addEventListener("click", (e) => {
+    if (refs.vaultSortContainer && !refs.vaultSortContainer.contains(e.target)) {
+      refs.vaultSortContainer.classList.remove("open");
+      refs.vaultSortToggleBtn.setAttribute("aria-expanded", "false");
+    }
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && refs.vaultSortContainer && refs.vaultSortContainer.classList.contains("open")) {
+      refs.vaultSortContainer.classList.remove("open");
+      refs.vaultSortToggleBtn.setAttribute("aria-expanded", "false");
+    }
+  });
+}
+
+if (refs.playAllVaultBtn) {
+  refs.playAllVaultBtn.addEventListener("click", playAllVaultTracks);
+}
+
+if (refs.vaultTrackList) {
+  refs.vaultTrackList.addEventListener("click", (event) => {
+    const deleteBtn = event.target.closest('[data-action="delete-vault"]');
+    if (deleteBtn) {
+      event.stopPropagation();
+      const card = deleteBtn.closest(".vault-card");
+      if (card) {
+        deleteVaultTrack(card.dataset.vaultId);
+      }
+      return;
+    }
+
+    const queueBtn = event.target.closest('[data-action="queue-vault"]');
+    if (queueBtn) {
+      event.stopPropagation();
+      const card = queueBtn.closest(".vault-card");
+      if (card) {
+        addVaultTrackToPlaylist(card.dataset.vaultId, queueBtn);
+      }
+      return;
+    }
+
+    const playBtn = event.target.closest('[data-action="play-vault"]');
+    if (playBtn) {
+      event.stopPropagation();
+      const card = playBtn.closest(".vault-card");
+      if (card) {
+        playVaultTrackDirectly(card.dataset.vaultId);
+      }
+      return;
+    }
+
+    const card = event.target.closest(".vault-card");
+    if (card && !event.target.closest(".drag-handle")) {
+      playVaultTrackDirectly(card.dataset.vaultId);
+    }
+  });
+}
+
+// --- DRAG & DROP REORDERING & FILE UPLOAD ---
+
+let draggedReorderItem = null;
+
+function setupReorderingListeners() {
+  // Vault Drag & Drop Reorder
+  if (refs.vaultTrackList) {
+    refs.vaultTrackList.addEventListener("dragstart", (e) => {
+      if (e.target.closest("button") || e.target.closest("input") || e.target.closest("a") || e.target.closest("label")) {
+        e.preventDefault();
+        return;
+      }
+      const card = e.target.closest(".vault-card");
+      if (!card || state.vaultSearch.trim()) {
+        e.preventDefault();
+        return;
+      }
+      draggedReorderItem = { type: "vault", index: Number(card.dataset.index), id: card.dataset.vaultId };
+      card.classList.add("is-dragging");
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("text/plain", card.dataset.index);
+    });
+
+    refs.vaultTrackList.addEventListener("dragover", (e) => {
+      if (!draggedReorderItem || draggedReorderItem.type !== "vault") return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+      const card = e.target.closest(".vault-card");
+      if (card && Number(card.dataset.index) !== draggedReorderItem.index) {
+        refs.vaultTrackList.querySelectorAll(".vault-card").forEach((c) => c.classList.remove("drag-target-over"));
+        card.classList.add("drag-target-over");
+      }
+    });
+
+    refs.vaultTrackList.addEventListener("dragleave", (e) => {
+      const card = e.target.closest(".vault-card");
+      if (card && !card.contains(e.relatedTarget)) {
+        card.classList.remove("drag-target-over");
+      }
+    });
+
+    refs.vaultTrackList.addEventListener("dragend", () => {
+      refs.vaultTrackList.querySelectorAll(".vault-card").forEach((c) => {
+        c.classList.remove("is-dragging", "drag-target-over");
+      });
+      draggedReorderItem = null;
+    });
+
+    refs.vaultTrackList.addEventListener("drop", async (e) => {
+      if (!draggedReorderItem || draggedReorderItem.type !== "vault") return;
+      e.preventDefault();
+      const targetCard = e.target.closest(".vault-card");
+      refs.vaultTrackList.querySelectorAll(".vault-card").forEach((c) => {
+        c.classList.remove("is-dragging", "drag-target-over");
+      });
+
+      if (!targetCard) return;
+      const fromIndex = draggedReorderItem.index;
+      const toIndex = Number(targetCard.dataset.index);
+
+      if (fromIndex === toIndex || isNaN(fromIndex) || isNaN(toIndex)) return;
+
+      const [movedTrack] = state.vaultTracks.splice(fromIndex, 1);
+      state.vaultTracks.splice(toIndex, 0, movedTrack);
+
+      if (state.activeSource === "vault") {
+        if (state.currentIndex === fromIndex) {
+          state.currentIndex = toIndex;
+        } else if (fromIndex < state.currentIndex && toIndex >= state.currentIndex) {
+          state.currentIndex--;
+        } else if (fromIndex > state.currentIndex && toIndex <= state.currentIndex) {
+          state.currentIndex++;
+        }
+      }
+
+      renderVault();
+      await saveAllVaultTracksOrder(state.vaultTracks);
+      showToast(`Moved track: #${fromIndex + 1} → #${toIndex + 1}`, "⇅");
+    });
+  }
+
+  // Queue Drag & Drop Reorder
+  if (refs.playlist) {
+    refs.playlist.addEventListener("dragstart", (e) => {
+      if (e.target.closest("button") || e.target.closest("input") || e.target.closest("a") || e.target.closest("label")) {
+        e.preventDefault();
+        return;
+      }
+      const card = e.target.closest(".playlist-card");
+      if (!card || state.search.trim()) {
+        e.preventDefault();
+        return;
+      }
+      draggedReorderItem = { type: "queue", index: Number(card.dataset.index) };
+      card.classList.add("is-dragging");
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("text/plain", card.dataset.index);
+    });
+
+    refs.playlist.addEventListener("dragover", (e) => {
+      if (!draggedReorderItem || draggedReorderItem.type !== "queue") return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+      const card = e.target.closest(".playlist-card");
+      if (card && Number(card.dataset.index) !== draggedReorderItem.index) {
+        refs.playlist.querySelectorAll(".playlist-card").forEach((c) => c.classList.remove("drag-target-over"));
+        card.classList.add("drag-target-over");
+      }
+    });
+
+    refs.playlist.addEventListener("dragleave", (e) => {
+      const card = e.target.closest(".playlist-card");
+      if (card && !card.contains(e.relatedTarget)) {
+        card.classList.remove("drag-target-over");
+      }
+    });
+
+    refs.playlist.addEventListener("dragend", () => {
+      refs.playlist.querySelectorAll(".playlist-card").forEach((c) => {
+        c.classList.remove("is-dragging", "drag-target-over");
+      });
+      draggedReorderItem = null;
+    });
+
+    refs.playlist.addEventListener("drop", (e) => {
+      if (!draggedReorderItem || draggedReorderItem.type !== "queue") return;
+      e.preventDefault();
+      const targetCard = e.target.closest(".playlist-card");
+      refs.playlist.querySelectorAll(".playlist-card").forEach((c) => {
+        c.classList.remove("is-dragging", "drag-target-over");
+      });
+
+      if (!targetCard) return;
+      const fromIndex = draggedReorderItem.index;
+      const toIndex = Number(targetCard.dataset.index);
+
+      if (fromIndex === toIndex || isNaN(fromIndex) || isNaN(toIndex)) return;
+
+      const [movedTrack] = state.playlist.splice(fromIndex, 1);
+      state.playlist.splice(toIndex, 0, movedTrack);
+
+      if (state.activeSource === "queue") {
+        if (state.currentIndex === fromIndex) {
+          state.currentIndex = toIndex;
+        } else if (fromIndex < state.currentIndex && toIndex >= state.currentIndex) {
+          state.currentIndex--;
+        } else if (fromIndex > state.currentIndex && toIndex <= state.currentIndex) {
+          state.currentIndex++;
+        }
+      }
+
+      renderPlaylist();
+      showToast(`Queue reordered: #${fromIndex + 1} → #${toIndex + 1}`, "⇅");
+    });
+  }
+}
+
+function setupVaultFileDropzone() {
+  const dropzone = document.querySelector(".vault-dropzone-banner");
+  const panel = refs.vaultPanel;
+
+  if (!dropzone && !panel) return;
+
+  const targetElements = [dropzone, panel].filter(Boolean);
+  let dragCounter = 0;
+
+  targetElements.forEach((el) => {
+    el.addEventListener("dragenter", (e) => {
+      if (e.dataTransfer && e.dataTransfer.types && Array.from(e.dataTransfer.types).includes("Files")) {
+        e.preventDefault();
+        dragCounter++;
+        dropzone?.classList.add("is-dragover");
+        panel?.classList.add("is-dragover");
+      }
+    });
+
+    el.addEventListener("dragover", (e) => {
+      if (e.dataTransfer && e.dataTransfer.types && Array.from(e.dataTransfer.types).includes("Files")) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "copy";
+      }
+    });
+
+    el.addEventListener("dragleave", (e) => {
+      if (e.dataTransfer && e.dataTransfer.types && Array.from(e.dataTransfer.types).includes("Files")) {
+        e.preventDefault();
+        dragCounter--;
+        if (dragCounter <= 0) {
+          dragCounter = 0;
+          dropzone?.classList.remove("is-dragover");
+          panel?.classList.remove("is-dragover");
+        }
+      }
+    });
+
+    el.addEventListener("drop", async (e) => {
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+        e.preventDefault();
+        dragCounter = 0;
+        dropzone?.classList.remove("is-dragover");
+        panel?.classList.remove("is-dragover");
+
+        const files = Array.from(e.dataTransfer.files).filter((file) => file.type.startsWith("audio/"));
+        if (!files.length) {
+          showToast("Please drop valid audio files (MP3, WAV, etc.)", "!");
+          return;
+        }
+
+        showToast(`Importing ${files.length} audio track(s)...`, "⏳");
+        await loadUploadedFiles(files);
+        showToast(`Saved ${files.length} track(s) to Uploads Vault`, "✓");
+      }
+    });
+  });
+}
+
 syncVolumeControls(refs.volumeBar.value);
 syncSpeedControls(state.playbackRate);
 spectrumContext = refs.spectrumCanvas ? refs.spectrumCanvas.getContext("2d") : null;
@@ -949,3 +1977,8 @@ updateShuffleState();
 updateLoopState();
 updateTheme("auto");
 setTrack(0, false);
+setInterval(rotateMusicQuote, 6500);
+loadVaultFromDB();
+setupReorderingListeners();
+setupVaultFileDropzone();
+setupVaultSortDropdown();

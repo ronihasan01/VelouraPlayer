@@ -52,22 +52,25 @@
             <button class="mood-pill" type="button" data-theme="skyline-ride" aria-pressed="false">Skyline Ride</button>
           </div>
         </div>
-
-        <label class="upload-panel" for="audioUpload">
-          <input id="audioUpload" type="file" accept="audio/*" multiple />
-          <span class="upload-label">Add Your Music</span>
-          <span class="upload-caption">MP3, WAV, AAC and more</span>
-        </label>
-
       </aside>
 
       <main class="main-stage">
         <section class="hero panel">
           <div class="topbar">
-            <div>
-              <p class="eyebrow">Now Playing</p>
-              <h2 id="heroTitle">Midnight Gold</h2>
-              <p id="heroArtist" class="muted">Veloura Session</p>
+            <div class="quote-container">
+              <p class="eyebrow">Soul of Music</p>
+              <h2 id="quoteDisplay" class="quote-text">“Let the music speak.”</h2>
+            </div>
+
+            <div class="topbar-upload-action">
+              <label class="topbar-upload-btn" for="audioUpload">
+                <svg class="upload-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                <span>Upload Your Music</span>
+              </label>
             </div>
           </div>
 
@@ -76,13 +79,34 @@
               <div class="track-copy">
                 <p class="card-label">Featured Track</p>
                 <h3 id="trackTitle">Midnight Gold</h3>
-                <p id="trackMeta" class="muted">Veloura Session • Demo</p>
+                <div class="track-meta-row">
+                  <button id="sourceToggleBtn" class="source-toggle-btn source-queue" type="button" aria-label="Switch playback source">
+                    <span class="source-dot"></span>
+                    <span id="playbackSourceBadge">Playing from: Your Queue</span>
+                    <span class="source-switch-tag">⇄ Switch</span>
+                  </button>
+                </div>
               </div>
 
               <div id="spectrumShell" class="spectrum-shell" aria-hidden="true">
                 <div class="spectrum-grid"></div>
                 <div class="spectrum-orb"></div>
                 <canvas id="spectrumCanvas" class="spectrum-canvas" width="960" height="220"></canvas>
+              </div>
+
+              <div class="progress-cluster">
+                <div class="time-row">
+                  <span id="currentTime">0:00</span>
+                  <span id="duration">0:00</span>
+                </div>
+                <input
+                  id="progressBar"
+                  type="range"
+                  min="0"
+                  max="100"
+                  value="0"
+                  aria-label="Track progress"
+                />
               </div>
 
               <div class="featured-transport">
@@ -174,73 +198,111 @@
                   </div>
                 </div>
               </div>
-
-              <div class="progress-cluster">
-                <div class="time-row">
-                  <span id="currentTime">0:00</span>
-                  <span id="duration">0:00</span>
-                </div>
-                <input
-                  id="progressBar"
-                  type="range"
-                  min="0"
-                  max="100"
-                  value="0"
-                  aria-label="Track progress"
-                />
-              </div>
             </div>
 
-            <div class="curation-card">
-              <p class="card-label">Room Notes</p>
-              <h3>Designed for immersive listening</h3>
-              <p class="muted">
-                Soft glow, tactile controls, and a library that feels more like
-                a members club than a file manager.
-              </p>
-
-              <div class="feature-list">
-                <div>
-                  <strong>Local Uploads</strong>
-                  <span>Your music stays in your browser session.</span>
+            <div id="queuePanel" class="library playlist-panel">
+              <div class="section-heading">
+                <div class="queue-heading-group">
+                  <div class="queue-title-row">
+                    <p class="eyebrow">Library</p>
+                    <span class="queue-subtitle">temporary</span>
+                  </div>
+                  <h2>Your Queue</h2>
                 </div>
-                <div>
-                  <strong>Responsive Motion</strong>
-                  <span>Subtle movement keeps the interface feeling alive.</span>
-                </div>
-                <div>
-                  <strong>Fast Control</strong>
-                  <span>Search, skip, scrub, and set volume instantly.</span>
+                <div class="library-tools">
+                  <button id="clearQueueButton" class="ghost-button compact-button" type="button" title="Clear all tracks from queue">
+                    Clear All
+                  </button>
                 </div>
               </div>
+
+              <div id="playlist" class="playlist" aria-live="polite"></div>
+
+              <label id="libraryUploadPanel" class="upload-panel library-upload" for="audioUploadQueue">
+                <span class="upload-label">+ Add Your Music</span>
+                <span class="upload-caption">MP3, WAV, AAC (temporary)</span>
+              </label>
             </div>
           </div>
         </section>
 
-        <section class="library panel">
+        <!-- UPLOADS VAULT SECTION (Placed directly above bottom Player Dock) -->
+        <section id="vaultPanel" class="vault-panel panel">
           <div class="section-heading">
-            <div>
-              <p class="eyebrow">Library</p>
-              <h2>Your Playlist</h2>
+            <div class="vault-heading-group">
+              <p class="eyebrow">Stored Collection</p>
+              <h2>Uploads Vault <span id="vaultCountBadge" class="vault-heading-badge">0 Tracks</span></h2>
             </div>
             <div class="library-tools">
               <div class="library-search">
                 <input
-                  id="searchInput"
+                  id="vaultSearchInput"
                   type="search"
-                  placeholder="Search your playlist"
-                  aria-label="Search your playlist"
+                  placeholder="Search vault collection..."
+                  aria-label="Search your uploaded music vault"
                 />
               </div>
-              <button id="shuffleButton" class="ghost-button compact-button" type="button">
-                Shuffle
-              </button>
+              <div class="vault-sort-container" id="vaultSortContainer">
+                <button id="vaultSortToggleBtn" class="vault-sort-btn" type="button" aria-expanded="false" aria-haspopup="listbox" title="Sort vault collection">
+                  <svg class="sort-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 6h18M6 12h12M10 18h4"></path>
+                  </svg>
+                  <span id="vaultSortCurrentLabel">Sort: Default</span>
+                  <svg class="sort-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </button>
+
+                <div id="vaultSortMenu" class="vault-sort-menu" role="listbox" aria-label="Sort options">
+                  <button class="vault-sort-option active" type="button" role="option" data-value="custom" aria-selected="true">
+                    <span class="sort-opt-name">Default Order</span>
+                    <span class="sort-opt-check">✓</span>
+                  </button>
+                  <button class="vault-sort-option" type="button" role="option" data-value="title-asc" aria-selected="false">
+                    <span class="sort-opt-name">Title (A → Z)</span>
+                    <span class="sort-opt-check">✓</span>
+                  </button>
+                  <button class="vault-sort-option" type="button" role="option" data-value="title-desc" aria-selected="false">
+                    <span class="sort-opt-name">Title (Z → A)</span>
+                    <span class="sort-opt-check">✓</span>
+                  </button>
+                  <button class="vault-sort-option" type="button" role="option" data-value="duration-asc" aria-selected="false">
+                    <span class="sort-opt-name">Duration (Shortest)</span>
+                    <span class="sort-opt-check">✓</span>
+                  </button>
+                  <button class="vault-sort-option" type="button" role="option" data-value="duration-desc" aria-selected="false">
+                    <span class="sort-opt-name">Duration (Longest)</span>
+                    <span class="sort-opt-check">✓</span>
+                  </button>
+                  <button class="vault-sort-option" type="button" role="option" data-value="newest" aria-selected="false">
+                    <span class="sort-opt-name">Recently Added</span>
+                    <span class="sort-opt-check">✓</span>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div id="playlist" class="playlist" aria-live="polite"></div>
+          <!-- Interactive Upload Banner / Dropzone -->
+          <label class="vault-dropzone-banner" for="audioUploadVault">
+            <div class="vault-drop-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+            </div>
+            <div class="vault-drop-content">
+              <span class="vault-drop-title">Drop your audio files here or click to browse</span>
+              <span class="vault-drop-sub">Songs saved in the Vault are stored permanently in your browser (IndexedDB)</span>
+            </div>
+          </label>
+
+          <!-- Vault Tracks Grid -->
+          <div id="vaultTrackList" class="vault-grid" aria-live="polite"></div>
         </section>
 
+        <!-- FLOATING BOTTOM PLAYER DOCK -->
         <section class="player-dock panel">
           <div class="transport">
             <button id="prevButton" class="control-button" type="button" aria-label="Previous track">
@@ -255,8 +317,11 @@
           </div>
 
           <div class="dock-meta">
-            <span id="dockTitle">Midnight Gold</span>
-            <span id="dockArtist">Veloura Session</span>
+            <div class="dock-meta-header">
+              <span id="dockTitle">No track selected</span>
+              <span id="dockSourceBadge" class="dock-source-badge source-queue">Queue</span>
+            </div>
+            <span id="dockArtist">Ready to play</span>
           </div>
 
           <div class="volume-shell">
@@ -274,6 +339,8 @@
       </main>
     </div>
 
+    <input id="audioUploadVault" type="file" accept="audio/*" multiple style="display: none;" />
+    <input id="audioUploadQueue" type="file" accept="audio/*" multiple style="display: none;" />
     <audio id="audioPlayer" preload="metadata"></audio>
     <script src="./app.js"></script>
   </body>
