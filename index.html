@@ -3,361 +3,461 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Veloura Player</title>
+    <title>Veloura</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Manrope:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
     <link rel="icon" type="image/png" href="./images/veloura-logo.png" />
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./home.css" />
   </head>
   <body data-theme="late-night">
-    <div class="background-glow background-glow-left"></div>
-    <div class="background-glow background-glow-right"></div>
+    <!-- Ambient Background Glows -->
+    <div class="ambient-glow ambient-glow-left"></div>
+    <div class="ambient-glow ambient-glow-right"></div>
 
-    <div class="app-shell">
-      <aside class="sidebar panel">
-        <div class="brand-lockup">
-          <div class="brand-top-row">
-            <p class="eyebrow">A Luxury Audio Player</p>
-            <a href="home.html" class="home-nav-badge" title="Go to Veloura Homepage">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+    <!-- Navigation Header -->
+    <header class="home-navbar">
+      <div class="nav-container">
+        <a href="index.html" class="nav-brand">
+          <div class="brand-badge-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 18V5l12-2v13"></path>
+              <circle cx="6" cy="18" r="3"></circle>
+              <circle cx="18" cy="16" r="3"></circle>
+            </svg>
+          </div>
+          <span class="brand-title">Veloura</span>
+        </a>
+
+        <nav class="nav-links" aria-label="Main Navigation">
+          <a href="#features" class="nav-link">Features</a>
+          <a href="#moods" class="nav-link">Curated Moods</a>
+          <a href="#vault" class="nav-link">Vault Engine</a>
+          <a href="#philosophy" class="nav-link">Philosophy</a>
+        </nav>
+
+        <div class="nav-actions">
+          <a href="player.html" class="nav-cta-btn">
+            <span>Open Web Player</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12h14M12 5l7 7-7 7"></path>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="home-main">
+      <!-- HERO SECTION -->
+      <section class="hero-section">
+        <div class="hero-content">
+          <div class="hero-tag">
+            <span class="tag-dot"></span>
+            <span>A LUXURY AUDIO SANCTUARY</span>
+          </div>
+
+          <h1 class="hero-title">
+            Feel Sound in Its <br />
+            <em>Purest Form.</em>
+          </h1>
+
+          <p class="hero-desc">
+            Veloura is a modern, distraction-free private audio lounge. Engineered with real-time frequency spectrum visualizers, adaptive ambient moods, and a persistent offline Vault for your personal collection.
+          </p>
+
+          <div class="hero-actions">
+            <a href="player.html" class="primary-hero-btn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="6 3 20 12 6 21 6 3"></polygon>
               </svg>
-              <span>Home</span>
+              <span>Launch Web Player</span>
+            </a>
+            <a href="#features" class="ghost-hero-btn">
+              <span>Explore Features</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M7 13l5 5 5-5M7 6l5 5 5-5"></path>
+              </svg>
             </a>
           </div>
-          <h1>Veloura</h1>
-          <p class="muted">
-            A private lounge for your favorite music. Upload your tracks and let
-            the room breathe around them.
+
+          <div class="hero-metrics">
+            <div class="metric-item">
+              <strong>64-Band</strong>
+              <span>Canvas Visualizer</span>
+            </div>
+            <div class="metric-divider"></div>
+            <div class="metric-item">
+              <strong>100% Offline</strong>
+              <span>IndexedDB Vault</span>
+            </div>
+            <div class="metric-divider"></div>
+            <div class="metric-item">
+              <strong>4 Moods</strong>
+              <span>Ambient Reactive Glow</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- HERO INTERACTIVE PLAYER MOCKUP -->
+        <div class="hero-visual">
+          <div class="player-mockup-card">
+            <div class="mockup-header">
+              <div class="mockup-pill">
+                <span class="live-pulse"></span>
+                <span>NOW PLAYING DEMO</span>
+              </div>
+              <div class="mockup-mood-indicator" id="heroMoodTag">Late Night</div>
+            </div>
+
+            <div class="mockup-media-stage">
+              <div class="mockup-vinyl">
+                <div class="vinyl-grooves">
+                  <div class="vinyl-label">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Animated Waveform Canvas -->
+              <canvas id="heroVisualizerCanvas" class="mockup-visualizer"></canvas>
+            </div>
+
+            <div class="mockup-info">
+              <div class="mockup-track-info">
+                <h3>Midnight Serenade</h3>
+                <p>Veloura Acoustic Session • 24-Bit Lossless</p>
+              </div>
+              <div class="mockup-duration">03:42</div>
+            </div>
+
+            <div class="mockup-progress-wrap">
+              <div class="mockup-progress-bar">
+                <div class="mockup-progress-fill"></div>
+              </div>
+            </div>
+
+            <div class="mockup-controls">
+              <button class="mockup-btn" type="button" aria-label="Previous">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                  <polygon points="19 20 9 12 19 4 19 20"></polygon>
+                  <line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="2.5"></line>
+                </svg>
+              </button>
+              <button class="mockup-play-btn" id="mockupPlayToggle" type="button" aria-label="Play or pause demo visualizer">
+                <svg class="icon-play" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <polygon points="6 3 20 12 6 21 6 3"></polygon>
+                </svg>
+                <svg class="icon-pause" style="display:none;" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <rect x="6" y="4" width="4" height="16"></rect>
+                  <rect x="14" y="4" width="4" height="16"></rect>
+                </svg>
+              </button>
+              <button class="mockup-btn" type="button" aria-label="Next">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                  <polygon points="5 4 15 12 5 20 5 4"></polygon>
+                  <line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2.5"></line>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- INTERACTIVE MOOD SWITCHER SHOWCASE -->
+      <section id="moods" class="section-container moods-showcase">
+        <div class="section-header">
+          <p class="section-eyebrow">Aesthetic Harmonization</p>
+          <h2 class="section-title">Curated Mood Environments</h2>
+          <p class="section-desc">
+            Audio isn't just heard — it's felt. Click through the moods below to experience how Veloura dynamically transforms the atmosphere to match your state of mind.
           </p>
         </div>
 
-        <div class="sidebar-card">
-          <p class="card-label">Collection</p>
-          <div class="collection-stats">
-            <div>
-              <span id="trackCount">0</span>
-              <p>Tracks</p>
-            </div>
-            <div>
-              <span id="playlistDuration">00:00</span>
-              <p>Runtime</p>
-            </div>
-          </div>
+        <!-- Interactive Mood Pills -->
+        <div class="mood-selector-bar">
+          <button class="home-mood-pill active" type="button" data-mood="late-night">
+            <span class="mood-swatch swatch-late-night"></span>
+            <span>Late Night</span>
+            <span class="mood-vibe-tag">Warm Gold</span>
+          </button>
+          <button class="home-mood-pill" type="button" data-mood="velvet-soul">
+            <span class="mood-swatch swatch-velvet-soul"></span>
+            <span>Velvet Soul</span>
+            <span class="mood-vibe-tag">Rose Crimson</span>
+          </button>
+          <button class="home-mood-pill" type="button" data-mood="glass-house">
+            <span class="mood-swatch swatch-glass-house"></span>
+            <span>Glass House</span>
+            <span class="mood-vibe-tag">Cyan Seafoam</span>
+          </button>
+          <button class="home-mood-pill" type="button" data-mood="skyline-ride">
+            <span class="mood-swatch swatch-skyline-ride"></span>
+            <span>Skyline Ride</span>
+            <span class="mood-vibe-tag">Electric Violet</span>
+          </button>
         </div>
 
-        <div class="sidebar-card moods-card">
-          <p class="card-label">Curated Moods</p>
-          <div class="moods">
-            <button class="mood-pill active" type="button" data-theme="auto" aria-pressed="true">Auto</button>
-            <button class="mood-pill" type="button" data-theme="late-night" aria-pressed="false">Late Night</button>
-            <button class="mood-pill" type="button" data-theme="velvet-soul" aria-pressed="false">Velvet Soul</button>
-            <button class="mood-pill" type="button" data-theme="glass-house" aria-pressed="false">Glass House</button>
-            <button class="mood-pill" type="button" data-theme="skyline-ride" aria-pressed="false">Skyline Ride</button>
+        <div class="mood-cards-grid">
+          <div class="mood-feature-card">
+            <div class="mood-card-header">
+              <span class="mood-icon">🌙</span>
+              <h3>Late Night</h3>
+            </div>
+            <p>Deep obsidian champagne with warm golden accents, tailor-made for intimate twilight listening sessions and jazz lounge melodies.</p>
+          </div>
+
+          <div class="mood-feature-card">
+            <div class="mood-card-header">
+              <span class="mood-icon">🌹</span>
+              <h3>Velvet Soul</h3>
+            </div>
+            <p>Rich rose-tinted hues and crimson ambient shadows designed to amplify expressive vocals, acoustic resonance, and soulful R&B.</p>
+          </div>
+
+          <div class="mood-feature-card">
+            <div class="mood-card-header">
+              <span class="mood-icon">🌊</span>
+              <h3>Glass House</h3>
+            </div>
+            <p>Crisp cyan and deep oceanic reflections offering a cool, pristine visual soundscape ideal for lo-fi beats, ambient electronica, and focus flow.</p>
+          </div>
+
+          <div class="mood-feature-card">
+            <div class="mood-card-header">
+              <span class="mood-icon">⚡</span>
+              <h3>Skyline Ride</h3>
+            </div>
+            <p>Vibrant cosmic violet and neon dusk illumination crafted for high-energy synthwave, late-night highway drives, and future bass.</p>
           </div>
         </div>
-      </aside>
+      </section>
 
-      <main class="main-stage">
-        <section class="hero panel">
-          <div class="topbar">
-            <div class="quote-container">
-              <p class="eyebrow">Soul of Music</p>
-              <h2 id="quoteDisplay" class="quote-text">“Let the music speak.”</h2>
-            </div>
+      <!-- AUDIOPHILE FEATURES GRID -->
+      <section id="features" class="section-container">
+        <div class="section-header">
+          <p class="section-eyebrow">Engineering & Experience</p>
+          <h2 class="section-title">Designed for Discerning Ears</h2>
+          <p class="section-desc">
+            Everything you need for an immersive musical journey, wrapped in a high-fidelity glassmorphic interface.
+          </p>
+        </div>
 
-            <div class="topbar-upload-action">
-              <a href="home.html" class="topbar-home-btn" title="Back to Veloura Homepage">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                  <polyline points="9 22 9 12 15 12 15 22"></polyline>
-                </svg>
-                <span>Home</span>
-              </a>
-              <label class="topbar-upload-btn" for="audioUpload">
-                <svg class="upload-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                  <polyline points="17 8 12 3 7 8"></polyline>
-                  <line x1="12" y1="3" x2="12" y2="15"></line>
-                </svg>
-                <span>Upload Your Music</span>
-              </label>
-            </div>
-          </div>
-
-          <div class="hero-grid">
-            <div class="now-playing-card">
-              <div class="track-copy">
-                <p class="card-label">Featured Track</p>
-                <h3 id="trackTitle">Midnight Gold</h3>
-                <div class="track-meta-row">
-                  <button id="sourceToggleBtn" class="source-toggle-btn source-queue" type="button" aria-label="Switch playback source">
-                    <span class="source-dot"></span>
-                    <span id="playbackSourceBadge">Playing from: Your Queue</span>
-                    <span class="source-switch-tag">⇄ Switch</span>
-                  </button>
-                </div>
-              </div>
-
-              <div id="spectrumShell" class="spectrum-shell" aria-hidden="true">
-                <div class="spectrum-grid"></div>
-                <div class="spectrum-orb"></div>
-                <canvas id="spectrumCanvas" class="spectrum-canvas" width="960" height="220"></canvas>
-              </div>
-
-              <div class="progress-cluster">
-                <div class="time-row">
-                  <span id="currentTime">0:00</span>
-                  <span id="duration">0:00</span>
-                </div>
-                <input
-                  id="progressBar"
-                  type="range"
-                  min="0"
-                  max="100"
-                  value="0"
-                  aria-label="Track progress"
-                />
-              </div>
-
-              <div class="featured-transport">
-                <button
-                  id="featuredShuffleButton"
-                  class="ghost-button compact-button featured-shuffle-button"
-                  type="button"
-                  aria-label="Shuffle playlist"
-                >
-                  Shuffle
-                </button>
-                <button
-                  id="skipBackButton"
-                  class="ghost-button compact-button featured-skip-button"
-                  type="button"
-                  aria-label="Skip backward 5 seconds"
-                >
-                  -5s
-                </button>
-                <button
-                  id="featuredPrevButton"
-                  class="control-button"
-                  type="button"
-                  aria-label="Previous track"
-                >
-                  &#9664;&#9664;
-                </button>
-                <button
-                  id="featuredPlayButton"
-                  class="play-button"
-                  type="button"
-                  aria-label="Play or pause"
-                >
-                  Play
-                </button>
-                <button
-                  id="featuredNextButton"
-                  class="control-button"
-                  type="button"
-                  aria-label="Next track"
-                >
-                  &#9654;&#9654;
-                </button>
-                <button
-                  id="skipForwardButton"
-                  class="ghost-button compact-button featured-skip-button"
-                  type="button"
-                  aria-label="Skip forward 5 seconds"
-                >
-                  +5s
-                </button>
-                <button
-                  id="featuredLoopButton"
-                  class="ghost-button compact-button featured-loop-button"
-                  type="button"
-                  aria-label="Loop current track"
-                >
-                  Loop
-                </button>
-              </div>
-
-              <div class="featured-control-rail">
-                <div class="featured-volume-card">
-                  <div class="featured-control-copy">
-                    <span class="featured-control-label">Volume</span>
-                    <span id="featuredVolumeValue" class="featured-control-value">72%</span>
-                  </div>
-                  <input
-                    id="featuredVolumeBar"
-                    class="featured-range"
-                    type="range"
-                    min="0"
-                    max="100"
-                    value="72"
-                    aria-label="Featured volume control"
-                  />
-                </div>
-
-                <div class="featured-speed-card">
-                  <div class="featured-control-copy">
-                    <span class="featured-control-label">Speed</span>
-                    <span id="speedValue" class="featured-control-value">1.0x</span>
-                  </div>
-                  <div id="speedControls" class="speed-pills" aria-label="Playback speed">
-                    <button class="speed-pill" type="button" data-speed="0.75">0.75x</button>
-                    <button class="speed-pill active" type="button" data-speed="1">1.0x</button>
-                    <button class="speed-pill" type="button" data-speed="1.25">1.25x</button>
-                    <button class="speed-pill" type="button" data-speed="1.5">1.5x</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div id="queuePanel" class="library playlist-panel">
-              <div class="section-heading">
-                <div class="queue-heading-group">
-                  <div class="queue-title-row">
-                    <p class="eyebrow">Library</p>
-                    <span class="queue-subtitle">temporary</span>
-                  </div>
-                  <h2>Your Queue</h2>
-                </div>
-                <div class="library-tools">
-                  <button id="clearQueueButton" class="ghost-button compact-button" type="button" title="Clear all tracks from queue">
-                    Clear All
-                  </button>
-                </div>
-              </div>
-
-              <div id="playlist" class="playlist" aria-live="polite"></div>
-
-              <label id="libraryUploadPanel" class="upload-panel library-upload" for="audioUploadQueue">
-                <span class="upload-label">+ Add Your Music</span>
-                <span class="upload-caption">MP3, WAV, AAC (temporary)</span>
-              </label>
-            </div>
-          </div>
-        </section>
-
-        <!-- UPLOADS VAULT SECTION (Placed directly above bottom Player Dock) -->
-        <section id="vaultPanel" class="vault-panel panel">
-          <div class="section-heading">
-            <div class="vault-heading-group">
-              <p class="eyebrow">Stored Collection</p>
-              <h2>Uploads Vault <span id="vaultCountBadge" class="vault-heading-badge">0 Tracks</span></h2>
-            </div>
-            <div class="library-tools">
-              <div class="library-search">
-                <input
-                  id="vaultSearchInput"
-                  type="search"
-                  placeholder="Search vault collection..."
-                  aria-label="Search your uploaded music vault"
-                />
-              </div>
-              <div class="vault-sort-container" id="vaultSortContainer">
-                <button id="vaultSortToggleBtn" class="vault-sort-btn" type="button" aria-expanded="false" aria-haspopup="listbox" title="Sort vault collection">
-                  <svg class="sort-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M3 6h18M6 12h12M10 18h4"></path>
-                  </svg>
-                  <span id="vaultSortCurrentLabel">Sort: Default</span>
-                  <svg class="sort-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                  </svg>
-                </button>
-
-                <div id="vaultSortMenu" class="vault-sort-menu" role="listbox" aria-label="Sort options">
-                  <button class="vault-sort-option active" type="button" role="option" data-value="custom" aria-selected="true">
-                    <span class="sort-opt-name">Default Order</span>
-                    <span class="sort-opt-check">✓</span>
-                  </button>
-                  <button class="vault-sort-option" type="button" role="option" data-value="title-asc" aria-selected="false">
-                    <span class="sort-opt-name">Title (A → Z)</span>
-                    <span class="sort-opt-check">✓</span>
-                  </button>
-                  <button class="vault-sort-option" type="button" role="option" data-value="title-desc" aria-selected="false">
-                    <span class="sort-opt-name">Title (Z → A)</span>
-                    <span class="sort-opt-check">✓</span>
-                  </button>
-                  <button class="vault-sort-option" type="button" role="option" data-value="duration-asc" aria-selected="false">
-                    <span class="sort-opt-name">Duration (Shortest)</span>
-                    <span class="sort-opt-check">✓</span>
-                  </button>
-                  <button class="vault-sort-option" type="button" role="option" data-value="duration-desc" aria-selected="false">
-                    <span class="sort-opt-name">Duration (Longest)</span>
-                    <span class="sort-opt-check">✓</span>
-                  </button>
-                  <button class="vault-sort-option" type="button" role="option" data-value="newest" aria-selected="false">
-                    <span class="sort-opt-name">Recently Added</span>
-                    <span class="sort-opt-check">✓</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Interactive Upload Banner / Dropzone -->
-          <label class="vault-dropzone-banner" for="audioUploadVault">
-            <div class="vault-drop-icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="17 8 12 3 7 8"></polyline>
-                <line x1="12" y1="3" x2="12" y2="15"></line>
+        <div class="features-grid">
+          <div class="feature-box">
+            <div class="feature-icon-bubble">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="20" x2="18" y2="10"></line>
+                <line x1="12" y1="20" x2="12" y2="4"></line>
+                <line x1="6" y1="20" x2="6" y2="14"></line>
               </svg>
             </div>
-            <div class="vault-drop-content">
-              <span class="vault-drop-title">Drop your audio files here or click to browse</span>
-              <span class="vault-drop-sub">Songs saved in the Vault are stored permanently in your browser (IndexedDB)</span>
+            <h3>Real-Time Spectrum Engine</h3>
+            <p>HTML5 Web Audio visualizer with smooth frequency response curves, dynamic glow pulses, and ambient particles synchronized to every beat.</p>
+          </div>
+
+          <div class="feature-box">
+            <div class="feature-icon-bubble">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+                <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+                <line x1="6" y1="6" x2="6.01" y2="6"></line>
+                <line x1="6" y1="18" x2="6.01" y2="18"></line>
+              </svg>
             </div>
-          </label>
-
-          <!-- Vault Tracks Grid -->
-          <div id="vaultTrackList" class="vault-grid" aria-live="polite"></div>
-        </section>
-
-        <!-- FLOATING BOTTOM PLAYER DOCK -->
-        <section class="player-dock panel">
-          <div class="transport">
-            <button id="prevButton" class="control-button" type="button" aria-label="Previous track">
-              &#9664;&#9664;
-            </button>
-            <button id="playButton" class="play-button" type="button" aria-label="Play or pause">
-              Play
-            </button>
-            <button id="nextButton" class="control-button" type="button" aria-label="Next track">
-              &#9654;&#9654;
-            </button>
+            <h3>Persistent Stored Vault</h3>
+            <p>Upload your favorite audio files once. Veloura stores them permanently in your browser's IndexedDB so they remain ready even without an internet connection.</p>
           </div>
 
-          <div class="dock-meta">
-            <div class="dock-meta-header">
-              <span id="dockTitle">No track selected</span>
-              <span id="dockSourceBadge" class="dock-source-badge source-queue">Queue</span>
+          <div class="feature-box">
+            <div class="feature-icon-bubble">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="16 3 21 3 21 8"></polyline>
+                <line x1="4" y1="20" x2="21" y2="3"></line>
+                <polyline points="21 16 21 21 16 21"></polyline>
+                <line x1="15" y1="15" x2="21" y2="21"></line>
+                <line x1="4" y1="4" x2="9" y2="9"></line>
+              </svg>
             </div>
-            <span id="dockArtist">Ready to play</span>
+            <h3>Drag, Reorder & Custom Sort</h3>
+            <p>Full drag-and-drop playlist organization. Arrange tracks in your preferred custom order or sort dynamically by Title, Duration, and Recency.</p>
           </div>
 
-          <div class="volume-shell">
-            <label for="volumeBar">Volume</label>
-            <input
-              id="volumeBar"
-              type="range"
-              min="0"
-              max="100"
-              value="72"
-              aria-label="Volume control"
-            />
+          <div class="feature-box">
+            <div class="feature-icon-bubble">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+            </div>
+            <h3>Variable Speed & Precision Audio</h3>
+            <p>Fine-tune playback speed from 0.75x to 1.5x with pitch-corrected audio rendering, quick skip intervals, shuffle algorithms, and seamless looping.</p>
           </div>
-        </section>
-      </main>
-    </div>
 
-    <input id="audioUploadVault" type="file" accept="audio/*" multiple style="display: none;" />
-    <input id="audioUploadQueue" type="file" accept="audio/*" multiple style="display: none;" />
-    <audio id="audioPlayer" preload="metadata"></audio>
-    <script src="./app.js"></script>
+          <div class="feature-box">
+            <div class="feature-icon-bubble">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                <line x1="12" y1="18" x2="12.01" y2="18"></line>
+              </svg>
+            </div>
+            <h3>Mobile & Desktop Optimized</h3>
+            <p>Responsive architecture prioritizing the core player on mobile while offering full dual-pane library management on desktop displays.</p>
+          </div>
+
+          <div class="feature-box">
+            <div class="feature-icon-bubble">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              </svg>
+            </div>
+            <h3>Zero Tracking & 100% Privacy</h3>
+            <p>All music decoding, spectrum visualization, and vault caching happen strictly on your device. Your sound remains strictly your own.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- VAULT ENGINE HIGHLIGHT -->
+      <section id="vault" class="section-container vault-feature-section">
+        <div class="vault-feature-card">
+          <div class="vault-feature-content">
+            <p class="section-eyebrow">Local Storage Technology</p>
+            <h2 class="section-title">Your Private Vault. Stored Forever.</h2>
+            <p class="section-desc">
+              Say goodbye to re-uploading songs every session. Veloura's custom IndexedDB vault engine preserves audio blobs, track metadata, and custom playback order permanently across restarts.
+            </p>
+            <ul class="vault-check-list">
+              <li>
+                <span class="check-icon">✓</span>
+                <span>Direct Audio Dropzone: Drag entire albums straight into your library.</span>
+              </li>
+              <li>
+                <span class="check-icon">✓</span>
+                <span>Smart Queue & Vault Dual-Source Switching with single click.</span>
+              </li>
+              <li>
+                <span class="check-icon">✓</span>
+                <span>Fast search filtering across Titles, Artists, and Albums.</span>
+              </li>
+            </ul>
+            <div class="vault-cta-row">
+              <a href="player.html" class="primary-hero-btn">
+                <span>Start Building Your Vault</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M5 12h14M12 5l7 7-7 7"></path>
+                </svg>
+              </a>
+            </div>
+          </div>
+          <div class="vault-feature-graphic">
+            <div class="vault-glass-preview">
+              <div class="vault-preview-header">
+                <span class="vault-preview-badge">Stored Collection • 24 Tracks</span>
+                <span class="vault-preview-sort">Sort: Default Order ▾</span>
+              </div>
+              <div class="vault-mock-list">
+                <div class="vault-mock-item active">
+                  <span class="mock-play-btn">▶</span>
+                  <div class="mock-item-text">
+                    <strong>Midnight Serenade</strong>
+                    <span>Veloura Lounge • 03:42</span>
+                  </div>
+                  <span class="mock-eq-pill">❚❚</span>
+                </div>
+                <div class="vault-mock-item">
+                  <span class="mock-play-btn">▶</span>
+                  <div class="mock-item-text">
+                    <strong>Horizon Sunset Drive</strong>
+                    <span>Synthwave Collective • 04:15</span>
+                  </div>
+                  <span class="mock-add-queue">+ Queue</span>
+                </div>
+                <div class="vault-mock-item">
+                  <span class="mock-play-btn">▶</span>
+                  <div class="mock-item-text">
+                    <strong>Acoustic Resonance</strong>
+                    <span>Lossless Studio • 05:08</span>
+                  </div>
+                  <span class="mock-add-queue">+ Queue</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PHILOSOPHY / QUOTE SECTION -->
+      <section id="philosophy" class="section-container philosophy-section">
+        <div class="philosophy-card">
+          <div class="quote-mark">“</div>
+          <blockquote class="philosophy-quote">
+            Music is pure magic. It connects souls, heals hearts, and paints emotions on the canvas of silence.
+          </blockquote>
+          <p class="philosophy-author">— The Veloura Audio Lounge Manifesto</p>
+        </div>
+      </section>
+
+      <!-- FINAL CALL TO ACTION BANNER -->
+      <section class="section-container final-cta-section">
+        <div class="final-cta-card">
+          <div class="cta-inner">
+            <h2 class="cta-title">Ready to Step Into Veloura?</h2>
+            <p class="cta-subtitle">
+              Your personal music lounge is one click away. Bring your favorite tracks and let the sound breathe.
+            </p>
+            <div class="cta-btn-wrap">
+              <a href="player.html" class="primary-hero-btn large-cta">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <polygon points="6 3 20 12 6 21 6 3"></polygon>
+                </svg>
+                <span>Launch Veloura Music Player</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="home-footer">
+      <div class="footer-container">
+        <div class="footer-brand-col">
+          <div class="nav-brand">
+            <div class="brand-badge-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 18V5l12-2v13"></path>
+                <circle cx="6" cy="18" r="3"></circle>
+                <circle cx="18" cy="16" r="3"></circle>
+              </svg>
+            </div>
+            <span class="brand-title">Veloura</span>
+          </div>
+          <p class="footer-tagline">A private luxury audio sanctuary crafted for audiophiles.</p>
+        </div>
+
+        <div class="footer-nav-col">
+          <strong>Navigation</strong>
+          <a href="#features">Features</a>
+          <a href="#moods">Curated Moods</a>
+          <a href="#vault">Vault Engine</a>
+          <a href="#philosophy">Audio Manifesto</a>
+        </div>
+
+        <div class="footer-action-col">
+          <strong>Web Experience</strong>
+          <a href="player.html" class="footer-launch-link">Open Web Player →</a>
+          <p class="footer-copy">&copy; 2026 Veloura Audio. All rights reserved.</p>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Interactive Script -->
+    <script src="./home.js"></script>
   </body>
 </html>
